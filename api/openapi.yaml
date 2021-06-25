@@ -1,0 +1,469 @@
+openapi: 3.0.0
+info:
+  title: PowerViews API
+  description: Documentation for powerviews api server (not engine server)
+  version: 0.1.1
+servers:
+  - url: http://powerviews-api.linkaform.com:8080/v1
+    description: "Prerelease testing"
+  - url: https://powerviews-api.linkaform.com/v1
+    description: "Main (production) server"
+  - url: http://localhost:8080/v1
+    description: "Local testing"
+security:
+- ApiKeyAuth: []
+tags:
+- name: accounts
+  description: Powerviews internal accounts (not PostgreSQL users)
+- name: pgusers
+  description: "Powerviews PostgreSQL users, a given /users/id can have several /pgusers/\
+    \ referring to it, this allows to have several credentials for the same powerviews\
+    \ user"
+- name: queries
+  description: Queries to load for a given account
+paths:
+  /accounts:
+    post:
+      tags:
+      - accounts
+      summary: Creates account
+      operationId: accountsPOST
+      requestBody:
+        $ref: '#/components/requestBodies/Account'
+      responses:
+        "201":
+          $ref: '#/components/responses/AccountOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Accounts
+  /accounts/{id}:
+    get:
+      tags:
+      - accounts
+      summary: Retrieve a given account
+      operationId: accountsIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/AccountOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Accounts
+    put:
+      tags:
+      - accounts
+      summary: Update a given user
+      operationId: accountsIdPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Account'
+      responses:
+        "200":
+          $ref: '#/components/responses/AccountOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Accounts
+    delete:
+      tags:
+      - accounts
+      summary: Delete a given user
+      operationId: accountsIdDELETE
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: "Deleted, no content"
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Accounts
+  /pgusers/:
+    post:
+      tags:
+      - pgusers
+      summary: "Create PostgreSQL user with given credentials, this pguser can see an isolated set of queries"
+      operationId: pgusersPOST
+      requestBody:
+        $ref: '#/components/requestBodies/Pguser'
+      responses:
+        "201":
+          $ref: '#/components/responses/PguserOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Pgusers
+  /pgusers/{id}:
+    get:
+      tags:
+      - pgusers
+      summary: Get a given pguser
+      operationId: pgusersIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/PguserOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Pgusers
+    put:
+      tags:
+      - pgusers
+      summary: Update a given pguser
+      operationId: pgusersIdPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Pguser'
+      responses:
+        "200":
+          $ref: '#/components/responses/PguserOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Pgusers
+    delete:
+      tags:
+      - pgusers
+      summary: Delete a given pguser
+      operationId: pgusersIdDELETE
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          $ref: '#/components/responses/PguserOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Pgusers
+  /queries/:
+    post:
+      tags:
+      - queries
+      summary: Create query
+      operationId: queriesPOST
+      requestBody:
+        $ref: '#/components/requestBodies/Query'
+      responses:
+        "201":
+          $ref: '#/components/responses/QueryOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Queries
+  /queries/{id}:
+    get:
+      tags:
+      - queries
+      summary: Get a given Query
+      operationId: queriesIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/QueryOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Queries
+    put:
+      tags:
+      - queries
+      summary: Update a given query
+      operationId: queriesIdPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Query'
+      responses:
+        "200":
+          $ref: '#/components/responses/QueryOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Queries
+    delete:
+      tags:
+      - queries
+      summary: Delete a given Query
+      operationId: queriesIdDELETE
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          $ref: '#/components/responses/QueryOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Queries
+components:
+  schemas:
+    Error:
+      required:
+      - error_code
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: "error code in uppercase, stable unique string\n* `EEXISTS`:\
+            \ value already exists\n* `EINVAL`: invalid value\n* ...\n"
+          enum:
+          - EEXISTS
+          - EINVAL
+          - '...'
+        error_message:
+          type: string
+          description: "Human readable error description, DO NOT depend on this value\
+            \ being stable"
+          example: value already exists
+    Account:
+      required:
+      - id
+      - name
+      - email
+      - apikey
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Powerviews internal id, will be used for most requests"
+          format: int64
+            #          readOnly: true
+          example: 100
+        name:
+          type: string
+          description: "Unique name used to refer to this user, will be used as basis\
+            \ for automatic table and view naming. Ex. 1259 maps infosync_answers_client_1259\
+            \ in mongo side and pv_1259_table in postgresql side.\n"
+          example: "1259"
+        email:
+          type: string
+          description: unique email in account domain used to identify account
+          format: email
+          example: juan.perez@example.com
+        desc:
+          type: string
+          description: account description
+          example: Juan perez
+          default: ""
+        apikey:
+          type: string
+          description: api key to start connections to lkf backend for this account
+          example: jwt xxxyyyzzz...
+      description: synonymous of linkaform customer account
+      example:
+        apikey: jwt xxxyyyzzz...
+        name: "1259"
+        id: 100
+        email: juan.perez@example.com
+        desc: Juan perez
+    Pguser:
+      required:
+      - id
+      - name
+      - pass
+      - account_id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Powerviews internal id, references this unique Powerviews\
+            \ PostgreSQL user (not related to internal postgresql oid)"
+          readOnly: true
+          example: 200
+        account_id:
+          type: integer
+          description: "Powerviews account id, the customer id, see account schema"
+          example: 100
+        name:
+          maxLength: 64
+          pattern: ^pv_.+$
+          type: string
+          description: "user name that endusers will use to connect to PostgreSQL,\
+            \ must start with prefix pv_ and must be unique across the PostgreSQL\
+            \ cluster"
+          example: pv_1259
+        pass:
+          type: string
+          description: password for PostgreSQL connection, could be password plaintext or the md5 hash of the password (requires 'md5' prefix)
+          pattern: ^(md5)?.+$
+          format: password
+          writeOnly: true
+        desc:
+          type: string
+          description: description
+          default: ""
+        connstr:
+          type: string
+          description: connection string (url)
+          #readOnly: true
+          default: ""
+      example:
+        connstr: connstr
+        account_id: 100
+        pass: ""
+        name: pv_1259
+        desc: desc
+    Query:
+      required:
+      - id
+      - script_id
+      - pguser_id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: internal (powerviews) id of the query (not related to LKF api
+            id)
+          readOnly: true
+          example: 300
+        pguser_id:
+          type: integer
+          description: "powerviews postgresql user id, see pguser schema"
+          example: 1
+        created:
+          type: integer
+          description: timestamp in seconds since unix epoch
+          readOnly: true
+        state:
+          type: string
+          description: state of engine fetcher for this query
+          enum:
+          - active
+          - pending
+          - error
+          - '...'
+        table:
+          maxLength: 64
+          type: string
+          description: "autogenerated name of postgresql table where verbatim data\
+            \ fetched from mongodb will be stored, this tables are not exposed to\
+            \ Pgusers"
+          readOnly: true
+        view:
+          maxLength: 64
+          type: string
+          description: "user-facing name of view that will be shown to client connections\
+            \ and/or Power BI, you can specify a pretty name here if desired, otherwise,\
+            \ a default automatically generated value is used"
+        refresh:
+          minimum: 10
+          type: integer
+          description: how often *in seconds* to refresh data from mongodb
+          default: 300
+        script_id:
+          type: integer
+          description: id of script in lkf api backend
+        query:
+          type: object
+          description: query to execute against mongodb
+          readOnly: true
+      example:
+        view: autogenerated
+        pguser_id: 1
+        created: 0
+        query: {}
+        refresh: 10
+        script_id: 67428
+        state: pending
+        table: table
+  responses:
+    Error:
+      description: Unknown error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    AccountOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Account'
+    PguserOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Pguser'
+    QueryOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Query'
+  requestBodies:
+    Account:
+      description: body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Account'
+      required: true
+    Pguser:
+      description: posgresql user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Pguser'
+      required: true
+    Query:
+      description: Query to run against mongodb and show to final user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Query'
+      required: true
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-API-KEY
+      in: header

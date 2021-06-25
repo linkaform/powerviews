@@ -1,0 +1,26 @@
+{
+  "name": "powerviews-api",
+  "version": "0.1.1",
+  "description": "powerviews api (not engine)",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "connect": "^3.2.0",
+    "js-yaml": "^3.3.0",
+    "oas3-tools": "^2.2.3",
+    "pg": "^8.6.0",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^4.44.4"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^4.1.1"
+  }
+}
