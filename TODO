@@ -1,5 +1,4 @@
 * push to git repo
-* remove secrets
 * fix connstr
 * create powerviews db in dbp3/4
 * sync view to table in user schema
@@ -7,7 +6,6 @@
 * josepato: dockerize
 * use query.apikey to access lkf backend
 * error fetch endpoint
-* manage exceptions to mongo
 * powerviews will add account id to db name
 * josepato: lkf api will send dbname without account suffix
 * josepato: create super-read-only-user in mongo for powerviews
