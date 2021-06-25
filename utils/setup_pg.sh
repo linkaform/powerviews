@@ -14,3 +14,4 @@ psql -f/dev/stdin -U $SUPERUSER $db <<SQL
 	CREATE SCHEMA IF NOT EXISTS $adminuser AUTHORIZATION $adminuser;
 	ALTER ROLE $adminuser IN DATABASE $db SET search_path = '\$user';
 SQL
+node utils/sync_db.js

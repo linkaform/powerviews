@@ -18,8 +18,14 @@ Polls postgresql database often to get list of work to do and executes it
 
 # To start services
 
-To run the powerviews REST API server, run in this directory:
+To start the powerviews REST API server, you need first to create postgresql
+database, database user and populate empty schema; there's a helper for that:
 
+```
+sh ./utils/setup_pg.sh
+```
+
+Then start api server:
 ```
 npm start
 ```
