@@ -4,7 +4,7 @@
 * good main loop in engine: pubsub
 * josepato: dockerize
 * use query.apikey to access lkf backend
-* error fetch endpoint
+* endpoint in rest api to get error status of query fetch
 * powerviews will add account id to db name
 * josepato: lkf api will send dbname without account suffix
 * josepato: create super-read-only-user in mongo for powerviews
