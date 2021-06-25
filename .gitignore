@@ -1,1 +1,3 @@
 node_modules
+# ignore because it include secrets, run engine as established in README
+runengine.sh
