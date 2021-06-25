@@ -1,3 +1,4 @@
+// destroy database and reconstruct it again (empty). Will DELETE all data.
 const db = require('../models');
 (async () => {
 try {
