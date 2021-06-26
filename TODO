@@ -1,4 +1,3 @@
-* fix connstr
 * create powerviews db in dbp3/4
 * sync view to table in user schema
 * good main loop in engine: pubsub
