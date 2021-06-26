@@ -1,6 +1,8 @@
 'use strict';
 
-const { Query } = require('../models');
+const db = require('../models');
+const { Query } = db;
+
 const Error = require('../structs/Error');
 
 /**
@@ -53,4 +55,10 @@ exports.queriesIdPUT = async (body, id) => {
  * body Query Query to run against mongodb and show to final user
  * returns Query
  **/
-exports.queriesPOST = async body => await Query.create(body)
+exports.queriesPOST = async body => await db.sequelize.transaction(async tx => {
+	const r = await Query.create(body, { transaction: tx })
+	const pguser = await r.getPguser();
+	await db.sequelize.query(`drop table if exists "${pguser.name}"."${r.table}";`, { transaction: tx });
+	await db.sequelize.query(`create table "${pguser.name}"."${r.table}" (data text);`, { transaction: tx });
+	return r;
+})

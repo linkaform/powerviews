@@ -92,16 +92,28 @@ const querymongo = async data => {
 //
 const getworkdata = async () => {
 	const { Query } = db;
-	return (await Query.findAll()).map(x => ({ script_id: x.script_id, table: x.table}));
+	return (await Query.findAll({ include: [{ all: true }]})).map(x => ({ script_id: x.script_id, table: x.table, pgusername: x.Pguser.name}));
 };
+
 const main = async () => {
 	const work = await getworkdata();
+	console.log('work', work);
 	for (w of work) {
 		const mongodata = await querymongo(await getqueryres((await dologin()).jwt, w.script_id));
 		console.log('res size', JSON.stringify(mongodata).length);
-		await db.sequelize.query(`drop table if exists "${w.table}";`);
-		await db.sequelize.query(`create table "${w.table}" (data text);`);
-		await db.sequelize.getQueryInterface().bulkInsert(w.table, mongodata.map(x => ({ data: JSON.stringify(x) })));
+		// insert into table in namespace of pguser
+		await db.sequelize.transaction(async tx => {
+			await db.sequelize.query(
+				`set local search_path = "${w.pgusername}";`,
+				{ transaction: tx }
+			);
+			await db.sequelize.getQueryInterface()
+				.bulkInsert(
+					w.table,
+					mongodata.map(x => ({ data: JSON.stringify(x) })),
+					{ transaction: tx }
+				);
+		})
 	}
 	setTimeout(main, 1000);
 
