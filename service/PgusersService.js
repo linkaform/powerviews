@@ -55,22 +55,22 @@ exports.pgusersIdPUT = async (body, id) => {
  * returns Pguser
  **/
 exports.pgusersPOST = async body => await db.sequelize.transaction(async tx => {
-		const pgu = await Pguser.create(body, { transaction: tx });
-		await db.sequelize.query(
-			`create user "${body.name}" with noinherit password '${body.pass}' in role powerviews_users;`,
-			{ transaction: tx }
-		);
-		await db.sequelize.query(
-			`create schema "${body.name}";`,
-			{ transaction: tx }
-		);
-		await db.sequelize.query(
-			`grant usage on schema "${body.name}" to "${body.name}";`,
-			{ transaction: tx }
-		);
-		await db.sequelize.query(
-			`grant usage, select on all tables in schema "${body.name}" to "${body.name}";`,
-			{ transaction: tx }
-		);
-		return pgu;
-	});
+	const pgu = await Pguser.create(body, { transaction: tx });
+	await db.sequelize.query(
+		`create user "${body.name}" with noinherit password '${body.pass}' in role powerviews_users;`,
+		{ transaction: tx }
+	);
+	await db.sequelize.query(
+		`create schema "${body.name}";`,
+		{ transaction: tx }
+	);
+	await db.sequelize.query(
+		`grant usage on schema "${body.name}" to "${body.name}";`,
+		{ transaction: tx }
+	);
+	await db.sequelize.query(
+		`grant usage, select on all tables in schema "${body.name}" to "${body.name}";`,
+		{ transaction: tx }
+	);
+	return pgu;
+});
