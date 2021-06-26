@@ -13,5 +13,7 @@ psql -f/dev/stdin -U $SUPERUSER $db <<SQL
 	REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 	CREATE SCHEMA IF NOT EXISTS $adminuser AUTHORIZATION $adminuser;
 	ALTER ROLE $adminuser IN DATABASE $db SET search_path = '\$user';
+	-- used only to group users for easy deletion
+	CREATE ROLE powerviews_users NOINHERIT;
 SQL
 node utils/sync_db.js

@@ -57,7 +57,7 @@ exports.pgusersIdPUT = async (body, id) => {
 exports.pgusersPOST = async body => await db.sequelize.transaction(async tx => {
 		const pgu = await Pguser.create(body, { transaction: tx });
 		await db.sequelize.query(
-			`create user "${body.name}" with password '${body.pass}';`,
+			`create user "${body.name}" with password '${body.pass}' in role powerviews_users;`,
 			{ transaction: tx }
 		);
 		await db.sequelize.query(
