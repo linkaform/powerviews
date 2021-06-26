@@ -1,24 +1,39 @@
 {
   "development": {
-    "username": "powerviews_admin",
-    "password": null,
-    "database": "powerviews",
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "schema": "powerviews_admin"
+    "orm": {
+      "username": "powerviews_admin",
+      "password": null,
+      "database": "powerviews",
+      "host": "127.0.0.1",
+      "dialect": "postgres",
+      "schema": "powerviews_admin"
+    },
+    "api": {
+      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+    }
   },
   "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "orm": {
+      "username": "root",
+      "password": null,
+      "database": "database_test",
+      "host": "127.0.0.1",
+      "dialect": "mysql"
+    }
+    "api": {
+      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+    },
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "orm": {
+      "username": "root",
+      "password": null,
+      "database": "database_production",
+      "host": "127.0.0.1",
+      "dialect": "mysql"
+    },
+    "api": {
+      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+    }
   }
 }
