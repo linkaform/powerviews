@@ -47,11 +47,14 @@ module.exports = (sequelize, DataTypes) => {
 			defaultValue: 300,
 			allowNull: false,
 			validate: {
-				min: 10
+				min: 60
 			}
 		},
-		query: {
+		lastquery: {
 			type: DataTypes.JSONB
+		},
+		lasterror: {
+			type: DataTypes.TEXT
 		}
 	}, {
 		sequelize,
