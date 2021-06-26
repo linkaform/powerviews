@@ -1,7 +1,23 @@
 'use strict';
+const { api: apiconfig = {} } = require('../config');
+
 const {
   Model
 } = require('sequelize');
+
+// receives as argument user and pass, returns connection string in url format,
+// returns empty string otherwise
+const genconnstr = (user, pass) => {
+	const Url = require('url-parse');
+
+	if (!apiconfig.connstr_base)
+		return "";
+	const url = new Url(apiconfig.connstr_base);
+	url.set('username', user);
+	url.set('password', pass);
+	return url.toString();
+}
+
 module.exports = (sequelize, DataTypes) => {
 	class Pguser extends Model {
 		/**
@@ -19,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
 	Pguser.init({
 		name: {
 			type: DataTypes.STRING(64),
+			allowNull: false,
 			unique: true,
 			validate: {
 				is: /^pv_.+$/
@@ -35,7 +52,10 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.TEXT
 		},
 		connstr: {
-			type: DataTypes.TEXT
+			type: DataTypes.VIRTUAL(DataTypes.TEXT, ['name', 'pass']),
+			get(){
+				return genconnstr(this.get('name'), this.get('pass'))
+			}
 		}
 	}, {
 		sequelize,
