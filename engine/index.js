@@ -47,7 +47,7 @@ const dologin = async () => {
 	});
 	const json = await res.json();
 	if (!json.success)
-		throw 'json not success';
+		throw 'json not success' + (json.error ? `, error: ${json.error}` : '');
 	return json
 };
 
@@ -59,7 +59,7 @@ const getqueryres = async (jwt, script_id) => {
 	});
 	const json = await res.json();
 	if (!json.success)
-		throw 'json not success';
+		throw 'json not success' + (json.error ? `, error: ${json.error}` : '');
 	return queryclean(json.response);
 };
 
@@ -90,10 +90,13 @@ const querymongo = async data => {
 // 	script_id,
 // 	table
 //
-const getworkdata = async () => {
-	const { Query } = db;
-	return (await Query.findAll({ include: [{ all: true }]})).map(x => ({ script_id: x.script_id, table: x.table, pgusername: x.Pguser.name}));
-};
+const getworkdata = async () =>
+	(await db.Query.findAll({ include: [{ all: true }]}))
+		.map(x => ({
+			pgusername: x.Pguser.name,
+			script_id: x.script_id,
+			table: x.table,
+		}));
 
 const main = async () => {
 	const work = await getworkdata();
@@ -105,6 +108,10 @@ const main = async () => {
 		await db.sequelize.transaction(async tx => {
 			await db.sequelize.query(
 				`set local search_path = "${w.pgusername}";`,
+				{ transaction: tx }
+			);
+			await db.sequelize.query(
+				`truncate "${w.pgusername}"."${w.table}";`,
 				{ transaction: tx }
 			);
 			await db.sequelize.getQueryInterface()
