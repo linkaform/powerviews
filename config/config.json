@@ -19,10 +19,10 @@
       "database": "database_test",
       "host": "127.0.0.1",
       "dialect": "mysql"
-    }
+    },
     "api": {
       "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
-    },
+    }
   },
   "production": {
     "orm": {
