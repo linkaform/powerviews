@@ -154,7 +154,7 @@ paths:
     delete:
       tags:
       - pgusers
-      summary: Delete a given pguser
+      summary: Delete a given pguser, also deletes all queries and views for the user
       operationId: pgusersIdDELETE
       parameters:
       - name: id
