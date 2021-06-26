@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
 		script_id: {
 			type: DataTypes.INTEGER,
 			field: 'script_id',
-			unique: true,
 			allowNull: false
 		},
 		table: {
@@ -57,6 +56,18 @@ module.exports = (sequelize, DataTypes) => {
 	}, {
 		sequelize,
 		modelName: 'Query',
+		indexes: [
+			// script_id must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'script_id', 'pguser_id' ]
+			},
+			// viewname must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'viewname', 'pguser_id' ]
+			}
+		]
 	});
 	return Query;
 };
