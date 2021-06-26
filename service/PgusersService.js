@@ -46,15 +46,28 @@ exports.pgusersIdGET = async id => {
  * id Integer 
  * returns Pguser
  **/
-exports.pgusersIdPUT = async (body, id) => {
-	let cur = await Pguser.findByPk(id);
+exports.pgusersIdPUT = async (body, id) => await db.sequelize.transaction(async tx => {
+	const cur = await Pguser.findByPk(id, { transaction: tx });
+	const old = cur.toJSON();
+
 	if (!cur)
 		throw new Error('ENOENT');
+	// apply validations first
 	for (const prop in body) {
 		cur[prop] = body[prop];
 	}
-	return await cur.save();
-};
+	if (body.name && old.name !== body.name) {
+		await db.sequelize.query(
+			`alter schema "${old.name}" rename to "${cur.name}";`,
+			{ transaction: tx }
+		);
+		await db.sequelize.query(
+			`alter role "${old.name}" rename to "${cur.name}";`,
+			{ transaction: tx }
+		);
+	}
+	return await cur.save({ transaction: tx });
+});
 
 /**
  * Create PostgreSQL user with given credentials, this pgusers sees an isolated
