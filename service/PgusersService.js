@@ -10,12 +10,21 @@ const Error = require('../structs/Error');
  * id Integer 
  * returns Pguser
  **/
-exports.pgusersIdDELETE = async id => {
-	const r = await Pguser.findByPk(id);
+exports.pgusersIdDELETE = async id => await db.sequelize.transaction(async tx => {
+	const r = await Pguser.findByPk(id, { transaction: tx });
 	if (!r)
 		throw new Error('ENOENT');
+
+	await db.sequelize.query(
+		`drop schema if exists "${r.name}" cascade`,
+		{ transaction: tx }
+	);
+	await db.sequelize.query(
+		`drop role if exists "${r.name}";`,
+		{ transaction: tx }
+	);
 	return await r.destroy();
-}
+});
 
 /**
  * Get a given pguser
