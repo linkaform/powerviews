@@ -41,15 +41,23 @@ exports.queriesIdGET = async id => {
  * id Integer
  * returns Query
  **/
-exports.queriesIdPUT = async (body, id) => {
-	let cur = await Query.findByPk(id);
+exports.queriesIdPUT = async (body, id) => await db.sequelize.transaction(async tx => {
+	const cur = await Query.findByPk(id, { include: [{ all: true }], transaction: tx });
+	const old = cur.toJSON();
+
 	if (!cur)
 		throw new Error('ENOENT');
 	for (const prop in body) {
 		cur[prop] = body[prop];
 	}
-	return await cur.save();
-};
+	if (body.view && body.view !== old.view)
+		await db.sequelize.query(
+			`alter view if exists "${cur.Pguser.name}.${old.view}" rename to "${cur.Pguser.name}.${cur.view}";`,
+			{ transaction: tx }
+		);
+
+	return await cur.save({ transaction: tx });
+});
 
 /**
  * Create query
