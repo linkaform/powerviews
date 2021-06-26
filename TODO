@@ -1,5 +1,7 @@
 * create powerviews db in dbp3/4
 * sync view to table in user schema
+	* depends on lkf api returning schema key including necessary
+	  transformations
 * good main loop in engine: pubsub
 * josepato: dockerize
 * endpoint in rest api to get error status of query fetch
