@@ -66,6 +66,11 @@ module.exports = (sequelize, DataTypes) => {
 			{
 				unique: true,
 				fields: [ 'viewname', 'pguser_id' ]
+			},
+			// tablename must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'tablename', 'pguser_id' ]
 			}
 		]
 	});
