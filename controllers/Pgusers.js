@@ -15,7 +15,6 @@ module.exports.pgusersIdDELETE = async (req, res, next, id) => {
 module.exports.pgusersIdGET = async (req, res, next, id) => {
   try {
     const response = await Pgusers.pgusersIdGET(id);
-	  console.log('response', response);
     utils.writeJson(res, response, 200);
   } catch (e) {
     utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
