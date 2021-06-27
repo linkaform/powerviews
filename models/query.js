@@ -92,6 +92,9 @@ module.exports = (sequelize, DataTypes) => {
 			{
 				unique: true,
 				fields: [ 'tablename', 'pguser_id' ]
+			},
+			{
+				fields: [ 'state' ]
 			}
 		],
 		hooks: {
