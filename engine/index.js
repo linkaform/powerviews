@@ -84,17 +84,40 @@ const querymongo = async data => {
 // 	script_id,
 // 	table
 //
-const getpgqueries = async () => await Query.findAll({ include: [{ all: true }]});
+const getpgqueries = async () => {
+	const queries = (await db.sequelize.query(`
+		update queries
+		set	state = 'inqueue'
+		where	extract(epoch from 'now'::timestamptz)::int >=
+			last_refresh + refresh
+		returning *;
+		`,
+		{
+			model: Query,
+			mapToModel: Query
+		}
+	))
+	for (q of queries) {
+		q.Pguser = await q.getPguser();
+	}
+	return queries;
+};
+	//await Query.findAll({
+		//include: [{ all: true }]
+	//});
 
 const main = async () => {
 	const pgqueries = await getpgqueries();
 	console.log('XXXXXXXXXXXXXXXXXXXXXX');
+	//console.log('pgqueries', pgqueries);
 	console.log('pgqueries', pgqueries.map(({ id, script_id, Pguser: {name: pgusername }}) => ({ id, script_id, pgusername })));
+	//return;
 	for (pgq of pgqueries) {
 		try {
-			pgq.lastquery = await getqueryres((await dologin()).jwt, pgq.script_id);
+			pgq.state = 'working';
+			pgq.last_query = await getqueryres((await dologin()).jwt, pgq.script_id);
 			await pgq.save(); // store last query in pg db
-			const mongodata = await querymongo(queryclean(pgq.lastquery));
+			const mongodata = await querymongo(queryclean(pgq.last_query));
 			console.log('res size', JSON.stringify(mongodata).length);
 			// insert into table in namespace of pguser
 			await db.sequelize.transaction(async tx => {
@@ -113,14 +136,20 @@ const main = async () => {
 						{ transaction: tx }
 					);
 			})
-			pgq.lasterror = null;
+			pgq.last_error = null;
+			const now = new Date() / 1000;
+			pgq.state = 'success';
+			pgq.last_refresh = now;
+			pgq.last_try = now;
 			await pgq.save();
 		} catch (e) {
 			console.log(e);
 			try {
+				pgq.state = 'error';
 				// report and save this query error but continue
 				// with remaining ones
-				pgq.lasterror = e;
+				pgq.last_error = e.toString();
+				pgq.last_try = new Date() / 1000;
 				await pgq.save();
 			} catch (e) {
 				console.log(e);

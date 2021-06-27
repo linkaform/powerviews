@@ -383,7 +383,7 @@ components:
 
             * __inqueue__: engine determined it must work with this record, it is in queue but not yet processing
 
-            * __working__: engine has reached the point in the work queue where it is currently processing this record
+            * __working__: engine has reached the point in the work queue where it is currently processing this record (short lived state)
 
             * __error__: engine found an error during the processing of this record, see *last_error* field for more info. Engine will try again this record after *retry* seconds. *last_try* shows the timestamp of the last error.
 
