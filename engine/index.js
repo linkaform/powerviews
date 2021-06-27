@@ -3,6 +3,12 @@ const fetch = require('node-fetch');
 const db = require('../models');
 const { Query } = db;
 
+const loginsingleton = {
+	jwt: '',
+	success: false,
+	expires: 0 // timestamp in ms when this token expires
+};
+
 let LKFPOWERVIEWSENGINELOGINUSER;
 let LKFPOWERVIEWSENGINELOGINAPIKEY;
 let LKFPOWERVIEWSENGINEMONGOURL;
@@ -37,6 +43,8 @@ const queryclean = json => {
 };
 
 const dologin = async () => {
+	if (loginsingleton.success && loginsingleton.expires > new Date())
+		return loginsingleton.jwt;
 	const body = {
 		username: LKFPOWERVIEWSENGINELOGINUSER,
 		api_key: LKFPOWERVIEWSENGINELOGINAPIKEY
@@ -50,7 +58,10 @@ const dologin = async () => {
 	const json = await res.json();
 	if (!json.success)
 		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
-	return json
+	loginsingleton.jwt = json.jwt;
+	loginsingleton.success = json.success;
+	loginsingleton.expires = new Date() + 3600 * 1000; // 1 hour
+	return loginsingleton.jwt;
 };
 
 const getqueryres = async (jwt, script_id) => {
@@ -86,10 +97,17 @@ const querymongo = async data => {
 //
 const getpgqueries = async () => {
 	const queries = (await db.sequelize.query(`
+		-- atomically retrieve and set inqueue state
 		update queries
 		set	state = 'inqueue'
-		where	extract(epoch from 'now'::timestamptz)::int >=
-			last_refresh + refresh
+		where	state = 'unprocessed' or
+			state = 'inqueue' or
+			(state = 'success' and
+				extract(epoch from 'now'::timestamptz)::int >=
+				last_refresh + refresh) or
+			(state = 'error' and
+				extract(epoch from 'now'::timestamptz)::int >=
+				last_try + retry)
 		returning *;
 		`,
 		{
@@ -97,25 +115,21 @@ const getpgqueries = async () => {
 			mapToModel: Query
 		}
 	))
-	for (q of queries) {
-		q.Pguser = await q.getPguser();
-	}
 	return queries;
 };
-	//await Query.findAll({
-		//include: [{ all: true }]
-	//});
 
 const main = async () => {
+	// how many queries process concurrently (not in parallel)
+	const concurrency = 100;
 	const pgqueries = await getpgqueries();
 	console.log('XXXXXXXXXXXXXXXXXXXXXX');
-	//console.log('pgqueries', pgqueries);
-	console.log('pgqueries', pgqueries.map(({ id, script_id, Pguser: {name: pgusername }}) => ({ id, script_id, pgusername })));
 	//return;
-	for (pgq of pgqueries) {
+	const procpgq = async pgq => {
 		try {
+			pgq.Pguser = await pgq.getPguser();
+			console.log('working...:', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
-			pgq.last_query = await getqueryres((await dologin()).jwt, pgq.script_id);
+			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
 			await pgq.save(); // store last query in pg db
 			const mongodata = await querymongo(queryclean(pgq.last_query));
 			console.log('res size', JSON.stringify(mongodata).length);
@@ -155,6 +169,10 @@ const main = async () => {
 				console.log(e);
 			}
 		}
+	}
+	for (let i = 0; i < pgqueries.length; i += concurrency) {
+		const tmp = pgqueries.slice(i, i + concurrency);
+		await Promise.all(tmp.map(t => procpgq(t)));
 	}
 };
 
