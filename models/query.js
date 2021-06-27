@@ -92,8 +92,18 @@ module.exports = (sequelize, DataTypes) => {
 			{
 				unique: true,
 				fields: [ 'tablename', 'pguser_id' ]
-			},
-		]
+			}
+		],
+		hooks: {
+			afterSync: async () => { // create complex indexes
+				await sequelize.query(
+					`create index "queries_last_refresh_refresh_idx" on queries ((last_refresh + refresh) desc);`
+				);
+				await sequelize.query(
+					`create index "queries_last_try_retry_idx" on queries ((last_try + retry) desc);`
+				);
+			}
+		}
 	});
 	return Query;
 };
