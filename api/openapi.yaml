@@ -345,9 +345,7 @@ components:
           type: string
           description: connection string (url)
           readOnly: true
-          default: ""
       example:
-        connstr: connstr
         account_id: 100
         pass: ""
         name: pv_1259
