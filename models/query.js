@@ -50,12 +50,30 @@ module.exports = (sequelize, DataTypes) => {
 				min: 60
 			}
 		},
-		lastquery: {
+		retry: {
+			type: DataTypes.INTEGER,
+			defaultValue: 30,
+			allowNull: false,
+			validate: {
+				min: 1
+			}
+		},
+		last_query: {
 			type: DataTypes.JSONB
 		},
-		lasterror: {
+		last_error: {
 			type: DataTypes.TEXT
-		}
+		},
+		last_refresh: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: sequelize.fn('date_part', 'epoch', sequelize.cast('now', 'timestamptz'))
+		},
+		last_try: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: sequelize.fn('date_part', 'epoch', sequelize.cast('now', 'timestamptz'))
+		},
 	}, {
 		sequelize,
 		modelName: 'Query',
@@ -74,7 +92,7 @@ module.exports = (sequelize, DataTypes) => {
 			{
 				unique: true,
 				fields: [ 'tablename', 'pguser_id' ]
-			}
+			},
 		]
 	});
 	return Query;
