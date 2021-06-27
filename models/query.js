@@ -33,8 +33,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		state: {
 			type: DataTypes.ENUM,
-			values: ['active', 'pending', 'error'],
-			defaultValue: 'pending'
+			values: ['unprocessed', 'inqueue', 'working', 'error', 'success'],
+			defaultValue: 'unprocessed'
 		},
 		view: {
 			type: DataTypes.STRING(64),
@@ -67,12 +67,12 @@ module.exports = (sequelize, DataTypes) => {
 		last_refresh: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: sequelize.fn('date_part', 'epoch', sequelize.cast('now', 'timestamptz'))
+			defaultValue: 0
 		},
 		last_try: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: sequelize.fn('date_part', 'epoch', sequelize.cast('now', 'timestamptz'))
+			defaultValue: 0
 		},
 	}, {
 		sequelize,
