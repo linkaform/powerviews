@@ -9,7 +9,7 @@
       "schema": "powerviews_admin"
     },
     "api": {
-      "key": null,
+      "key": "",
       "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
     }
   },
