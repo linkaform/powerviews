@@ -91,10 +91,7 @@ const querymongo = async data => {
 	}
 };
 
-// gets array of work to do from postgresql, return includes:
-// 	script_id,
-// 	table
-//
+// gets array of work to do from postgresql
 const getpgqueries = async () => {
 	const queries = (await db.sequelize.query(`
 		-- atomically retrieve and set inqueue state
