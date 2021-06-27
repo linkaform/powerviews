@@ -1,3 +1,5 @@
 node_modules
 # ignore because it include secrets, run engine as established in README
 runengine.sh
+# only commit manually (git add config/config.json) because of secrets
+config/config.json
