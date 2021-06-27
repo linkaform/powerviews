@@ -9,6 +9,7 @@
       "schema": "powerviews_admin"
     },
     "api": {
+      "key": null,
       "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
     }
   },
@@ -21,6 +22,7 @@
       "dialect": "mysql"
     },
     "api": {
+      "key": null,
       "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
     }
   },
@@ -33,6 +35,7 @@
       "dialect": "mysql"
     },
     "api": {
+      "key": null,
       "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
     }
   }
