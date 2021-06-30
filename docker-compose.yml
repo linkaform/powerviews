@@ -1,6 +1,6 @@
 version: '3.7'
 volumes:
-  postgres_data_13:
+  postgres_data_132:
 
 networks:
   linkaform:
@@ -38,12 +38,13 @@ services:
     hostname: psql
     env_file:
       - ./.psql
-    environment:
-        - POSTGRES_USER=powerviews_admin
-        - POSTGRES_PASSWORD=linkaform2018infosync
-        - POSTGRES_DB=powerviews
+    # environment:
+    #     - POSTGRES_USER=powerviews_admin
+    #     - POSTGRES_PASSWORD=linkaform2018infosync
+    #     - POSTGRES_DB=powerviews
     volumes:
-      - postgres_data_13:/var/lib/postgresql/data
+      - postgres_data_132:/var/lib/postgresql/data
+      - ./utils:/docker-entrypoint-initdb.d
     networks:
       linkaform:
     ports:

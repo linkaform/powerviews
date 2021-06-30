@@ -1,6 +1,13 @@
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
 const db = require('../models');
+const { Query } = db;
+
+const loginsingleton = {
+	jwt: '',
+	success: false,
+	expires: 0 // timestamp in ms when this token expires
+};
 
 let LKFPOWERVIEWSENGINELOGINUSER;
 let LKFPOWERVIEWSENGINELOGINAPIKEY;
@@ -36,76 +43,146 @@ const queryclean = json => {
 };
 
 const dologin = async () => {
+	if (loginsingleton.success && loginsingleton.expires > new Date())
+		return loginsingleton.jwt;
 	const body = {
 		username: LKFPOWERVIEWSENGINELOGINUSER,
 		api_key: LKFPOWERVIEWSENGINELOGINAPIKEY
 	};
-	const res = await fetch('https://app.linkaform.com/api/infosync/user_admin/login/', {
+	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
+	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify(body),
 		headers: { 'content-type': 'application/json' }
 	});
 	const json = await res.json();
 	if (!json.success)
-		throw 'json not success';
-	return json
+		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
+	loginsingleton.jwt = json.jwt;
+	loginsingleton.success = json.success;
+	loginsingleton.expires = new Date() + 3600 * 1000; // 1 hour
+	return loginsingleton.jwt;
 };
 
 const getqueryres = async (jwt, script_id) => {
-	const res = await fetch('https://app.linkaform.com/api/infosync/scripts/run/', {
+	const url = 'https://app.linkaform.com/api/infosync/scripts/run/';
+	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify({ script_id: script_id}),
 		headers: { 'content-type': 'application/json' }
 	});
 	const json = await res.json();
 	if (!json.success)
-		throw 'json not success';
-	return queryclean(json.response);
+		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
+	return json.response;
 };
 
 const querymongo = async data => {
 	const url = LKFPOWERVIEWSENGINEMONGOURL;
-	// try to connect to mongo if connection fail retry indefinitely each
-	// 3secs
-	const getmongoclient = () => new Promise((res, rej) => {
-		MongoClient.connect(url).then(
-			client => res(client),
-			err => console.log(err) || setTimeout(getmongoclient, 3000)
-		)
-	});
-	const client = await getmongoclient();
+	const client = await MongoClient.connect(url);
 
 	//console.log('data', JSON.stringify(data, null, "  "));
 	const db = client.db(data.db_name);
 	try {
 		const res = db.collection(data.collection)[data.command](data.query);
-
 		return await res.toArray();
 	} finally {
 		client.close();
 	}
 };
 
-// gets array of work to do from postgresql, return includes:
-// 	script_id,
-// 	table
-//
-const getworkdata = async () => {
-	const { Query } = db;
-	return (await Query.findAll()).map(x => ({ script_id: x.script_id, table: x.table}));
+// gets array of work to do from postgresql
+const getpgqueries = async () => {
+	const queries = (await db.sequelize.query(`
+		-- atomically retrieve and set inqueue state
+		update queries
+		set	state = 'inqueue'
+		where	state = 'unprocessed' or
+			state = 'inqueue' or
+			(state = 'success' and
+				extract(epoch from 'now'::timestamptz)::int >=
+				last_refresh + refresh) or
+			(state = 'error' and
+				extract(epoch from 'now'::timestamptz)::int >=
+				last_try + retry)
+		returning *;
+		`,
+		{
+			model: Query,
+			mapToModel: Query
+		}
+	))
+	return queries;
 };
-const main = async () => {
-	const work = await getworkdata();
-	for (w of work) {
-		const mongodata = await querymongo(await getqueryres((await dologin()).jwt, w.script_id));
-		console.log('res size', JSON.stringify(mongodata).length);
-		await db.sequelize.query(`drop table if exists "${w.table}";`);
-		await db.sequelize.query(`create table "${w.table}" (data text);`);
-		await db.sequelize.getQueryInterface().bulkInsert(w.table, mongodata.map(x => ({ data: JSON.stringify(x) })));
-	}
-	setTimeout(main, 1000);
 
+const main = async () => {
+	// how many queries process concurrently (not in parallel)
+	const concurrency = 100;
+	const pgqueries = await getpgqueries();
+	console.log('XXXXXXXXXXXXXXXXXXXXXX');
+	//return;
+	const procpgq = async pgq => {
+		try {
+			pgq.Pguser = await pgq.getPguser();
+			console.log('working...:', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
+			pgq.state = 'working';
+			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
+			await pgq.save(); // store last query in pg db
+			const mongodata = await querymongo(queryclean(pgq.last_query));
+			console.log('res size', JSON.stringify(mongodata).length);
+			// insert into table in namespace of pguser
+			await db.sequelize.transaction(async tx => {
+				await db.sequelize.query(
+					`set local search_path = "${pgq.Pguser.name}";`,
+					{ transaction: tx }
+				);
+				await db.sequelize.query(
+					`truncate "${pgq.table}";`,
+					{ transaction: tx }
+				);
+				await db.sequelize.getQueryInterface()
+					.bulkInsert(
+						pgq.table,
+						mongodata.map(x => ({ data: JSON.stringify(x) })),
+						{ transaction: tx }
+					);
+			})
+			pgq.last_error = null;
+			const now = new Date() / 1000;
+			pgq.state = 'success';
+			pgq.last_refresh = now;
+			pgq.last_try = now;
+			await pgq.save();
+		} catch (e) {
+			console.log(e);
+			try {
+				pgq.state = 'error';
+				// report and save this query error but continue
+				// with remaining ones
+				pgq.last_error = e.toString();
+				pgq.last_try = new Date() / 1000;
+				await pgq.save();
+			} catch (e) {
+				console.log(e);
+			}
+		}
+	}
+	for (let i = 0; i < pgqueries.length; i += concurrency) {
+		const tmp = pgqueries.slice(i, i + concurrency);
+		await Promise.all(tmp.map(t => procpgq(t)));
+	}
 };
+
+const loop = async() => {
+	try {
+		await main();
+	} catch (e) {
+		console.log(e);
+	} finally {
+		setTimeout(loop, 1000);
+
+	}
+}
 
 getconfig();
-main()
+loop();

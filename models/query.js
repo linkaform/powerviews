@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
 		script_id: {
 			type: DataTypes.INTEGER,
 			field: 'script_id',
-			unique: true,
 			allowNull: false
 		},
 		table: {
@@ -34,8 +33,8 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		state: {
 			type: DataTypes.ENUM,
-			values: ['active', 'pending', 'error'],
-			defaultValue: 'pending'
+			values: ['unprocessed', 'inqueue', 'working', 'error', 'success'],
+			defaultValue: 'unprocessed'
 		},
 		view: {
 			type: DataTypes.STRING(64),
@@ -48,15 +47,66 @@ module.exports = (sequelize, DataTypes) => {
 			defaultValue: 300,
 			allowNull: false,
 			validate: {
-				min: 10
+				min: 60
 			}
 		},
-		query: {
+		retry: {
+			type: DataTypes.INTEGER,
+			defaultValue: 30,
+			allowNull: false,
+			validate: {
+				min: 1
+			}
+		},
+		last_query: {
 			type: DataTypes.JSONB
-		}
+		},
+		last_error: {
+			type: DataTypes.TEXT
+		},
+		last_refresh: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+		},
+		last_try: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+		},
 	}, {
 		sequelize,
 		modelName: 'Query',
+		indexes: [
+			// script_id must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'script_id', 'pguser_id' ]
+			},
+			// viewname must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'viewname', 'pguser_id' ]
+			},
+			// tablename must not repeat by pguser_id
+			{
+				unique: true,
+				fields: [ 'tablename', 'pguser_id' ]
+			},
+			{
+				fields: [ 'state' ]
+			}
+		],
+		hooks: {
+			afterSync: async () => { // create complex indexes
+				await sequelize.query(
+					`create index "queries_last_refresh_refresh_idx" on queries ((last_refresh + refresh) desc);`
+				);
+				await sequelize.query(
+					`create index "queries_last_try_retry_idx" on queries ((last_try + retry) desc);`
+				);
+			}
+		}
 	});
 	return Query;
 };

@@ -10,6 +10,8 @@ const config = {
 		underscored: true,
 		underscoredAll: true
 	},
+	benchmark: true,
+	logging: (msg, time) => console.log(`${time}ms --`, msg.length < 1024 ? msg : `${msg.slice(0, 512)}...(${msg.length - 512} bytes more)`),
 	...configf
 };
 const db = {};

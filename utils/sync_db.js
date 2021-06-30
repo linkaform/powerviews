@@ -18,7 +18,7 @@ try {
 		await db.sequelize.query(`drop role "${user.rolname}";`);
 	}
 	// drop all tables, then create them
-	await db.sequelize.sync({ force: true });
+	await db.sequelize.sync({ force: true, hooks: true });
 } finally {
 	await db.sequelize.close()
 }

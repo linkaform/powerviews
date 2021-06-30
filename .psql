@@ -1,5 +1,5 @@
 # PSQL
-POSTGRES_USER=powerviews_admin
+POSTGRES_USER=postgres
 POSTGRES_PASSWORD=linkaform2018infosync
 #POSTGRES_DB=powerviews_admin
-POSTGRES_DB=powerviews
+POSTGRES_DB=postgres
