@@ -69,6 +69,6 @@ exports.queriesPOST = async body => await db.sequelize.transaction(async tx => {
 	const r = await Query.create(body, { transaction: tx })
 	const pguser = await r.getPguser({ transaction: tx });
 	await db.sequelize.query(`drop table if exists "${pguser.name}"."${r.table}" cascade;`, { transaction: tx });
-	await db.sequelize.query(`create table "${pguser.name}"."${r.table}" (data text);`, { transaction: tx });
+	await db.sequelize.query(`create table "${pguser.name}"."${r.table}" (data jsonb);`, { transaction: tx });
 	return r;
 })
