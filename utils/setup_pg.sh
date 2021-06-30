@@ -9,14 +9,11 @@ adminuser=powerviews_admin
 
 createuser -U $SUPERUSER -r $adminuser
 createdb -U $SUPERUSER -O $adminuser $db
-psql  -f/dev/stdin -U $SUPERUSER $db <<SQL
-    -- prevent users from creating public objects
+psql -f/dev/stdin -U $SUPERUSER $db <<SQL
 	REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-	-- create exclusive schema for adminuser
 	CREATE SCHEMA IF NOT EXISTS $adminuser AUTHORIZATION $adminuser;
-	-- prevent adminuser for creating public objects
 	ALTER ROLE $adminuser IN DATABASE $db SET search_path = '\$user';
-	-- we don't use privilege inheritance, but we require a method to group
-	-- powerviews postgresql users
+	-- used only to group users for easy deletion
 	CREATE ROLE powerviews_users NOINHERIT;
 SQL
+node utils/sync_db.js
