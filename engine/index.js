@@ -152,6 +152,8 @@ const main = async () => {
 							{ transaction: tx }
 						);
 			})
+			if (!mongodata.length)
+				throw 'Empty mongo response, table emptied.'
 			pgq.last_error = null;
 			const now = new Date() / 1000;
 			pgq.state = 'success';
