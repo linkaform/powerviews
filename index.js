@@ -2,7 +2,7 @@
 
 var http = require('http');
 var app = require('./app');
-var serverHost = '127.0.0.1';
+var serverHost = '0.0.0.0';
 var serverPort = 8080;
 
 // Initialize the Swagger middleware
