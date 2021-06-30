@@ -110,7 +110,8 @@ const getpgqueries = async () => {
 		`,
 		{
 			model: Query,
-			mapToModel: Query
+			mapToModel: Query,
+			logging: (msg, time) => console.log(`${time}ms -- get worklist from postgresql`)
 		}
 	))
 	return queries;
@@ -120,12 +121,11 @@ const main = async () => {
 	// how many queries process concurrently (not in parallel)
 	const concurrency = 100;
 	const pgqueries = await getpgqueries();
-	console.log('XXXXXXXXXXXXXXXXXXXXXX');
 	//return;
 	const procpgq = async pgq => {
 		try {
 			pgq.Pguser = await pgq.getPguser();
-			console.log('working...:', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
+			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
 			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
 			await pgq.save(); // store last query in pg db
