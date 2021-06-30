@@ -5,13 +5,14 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const configf = require('../config').orm;
+const trunc_string = require('../utils/trunc_string');
 const config = {
 	define: {
 		underscored: true,
 		underscoredAll: true
 	},
 	benchmark: true,
-	logging: (msg, time) => console.log(`${time}ms --`, msg.length < 1024 ? msg : `${msg.slice(0, 512)}...(${msg.length - 512} bytes more)`),
+	logging: (msg, time) => console.log(`${time}ms --`, trunc_string(msg)),
 	...configf
 };
 const db = {};
