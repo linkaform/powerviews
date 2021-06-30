@@ -1,0 +1,56 @@
+version: '3.7'
+volumes:
+  postgres_data_132:
+
+networks:
+  linkaform:
+    external:
+      name: linkaform
+
+services:
+  powerviews:
+    hostname: powerviews
+    container_name: powerviews
+    image: linkaform/powerviews:latest
+    build:
+       context: ./
+       dockerfile: Dockerfile
+       target: develop
+    command: ["sleep", "infinity"]
+    #command: ["npm", "start"]
+    volumes:
+        - ./:/srv/powerviews
+    env_file:
+        - ./.env
+    depends_on:
+        - postgres
+    networks:
+      linkaform:
+    ports:
+      - "8080:8080"
+
+
+
+  postgres:
+    image:  postgres:13-alpine
+    container_name: pv_psql
+    #command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    hostname: psql
+    env_file:
+      - ./.psql
+    # environment:
+    #     - POSTGRES_USER=powerviews_admin
+    #     - POSTGRES_PASSWORD=linkaform2018infosync
+    #     - POSTGRES_DB=powerviews
+    volumes:
+      - postgres_data_132:/var/lib/postgresql/data
+      - ./utils:/docker-entrypoint-initdb.d
+    networks:
+      linkaform:
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "powerviews", "-U", "powerviews_admin"]
+      interval: 5s
+      retries: 5
+    restart: always

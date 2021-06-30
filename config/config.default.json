@@ -4,13 +4,13 @@
       "username": "powerviews_admin",
       "password": null,
       "database": "powerviews",
-      "host": "127.0.0.1",
+      "host": "pv_psql",
       "dialect": "postgres",
       "schema": "powerviews_admin"
     },
     "api": {
       "key": null,
-      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+      "connstr_base": "postgresql://pv_psql:5432/powerviews"
     }
   },
   "test": {
@@ -18,12 +18,12 @@
       "username": "root",
       "password": null,
       "database": "database_test",
-      "host": "127.0.0.1",
+      "host": "pv_psql",
       "dialect": "mysql"
     },
     "api": {
       "key": null,
-      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+      "connstr_base": "postgresql://pv_psql:5432/powerviews"
     }
   },
   "production": {
@@ -31,12 +31,12 @@
       "username": "root",
       "password": null,
       "database": "database_production",
-      "host": "127.0.0.1",
+      "host": "pv_psql",
       "dialect": "mysql"
     },
     "api": {
       "key": null,
-      "connstr_base": "postgresql://127.0.0.1:5432/powerviews"
+      "connstr_base": "postgresql://pv_psql:5432/powerviews"
     }
   }
 }
