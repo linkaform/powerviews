@@ -16,4 +16,3 @@ psql -f/dev/stdin -U $SUPERUSER $db <<SQL
 	-- used only to group users for easy deletion
 	CREATE ROLE powerviews_users NOINHERIT;
 SQL
-node utils/sync_db.js
