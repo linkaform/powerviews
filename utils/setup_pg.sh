@@ -9,7 +9,7 @@ adminuser=powerviews_admin
 
 createuser -U $SUPERUSER -r $adminuser
 createdb -U $SUPERUSER -O $adminuser $db
-psql -f/dev/stdin -U $SUPERUSER $db <<SQL
+psql -h 127.0.0.1 -f/dev/stdin -U $SUPERUSER $db <<SQL
 	REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 	CREATE SCHEMA IF NOT EXISTS $adminuser AUTHORIZATION $adminuser;
 	ALTER ROLE $adminuser IN DATABASE $db SET search_path = '\$user';
