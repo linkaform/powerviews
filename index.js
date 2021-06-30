@@ -15,6 +15,7 @@ var options = {
 };
 
 var expressAppConfig = oas3Tools.expressAppConfig(path.join(__dirname, 'api/openapi.yaml'), options);
+expressAppConfig.addValidator();
 var app = expressAppConfig.getApp();
 
 // Initialize the Swagger middleware
