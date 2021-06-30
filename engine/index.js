@@ -1,6 +1,7 @@
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
 const db = require('../models');
+const trunc_string = require('../utils/trunc_string');
 const { Query } = db;
 
 const loginsingleton = {
@@ -129,8 +130,9 @@ const main = async () => {
 			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
 			await pgq.save(); // store last query in pg db
 			const mongodata = await querymongo(queryclean(pgq.last_query));
-			console.log('res size', JSON.stringify(mongodata).length);
+			console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
 			// insert into table in namespace of pguser
+			//
 			await db.sequelize.transaction(async tx => {
 				await db.sequelize.query(
 					`set local search_path = "${pgq.Pguser.name}";`,
@@ -140,12 +142,15 @@ const main = async () => {
 					`truncate "${pgq.table}";`,
 					{ transaction: tx }
 				);
-				await db.sequelize.getQueryInterface()
-					.bulkInsert(
-						pgq.table,
-						mongodata.map(x => ({ data: JSON.stringify(x) })),
-						{ transaction: tx }
-					);
+				if (mongodata.length > 0)
+					await db.sequelize.getQueryInterface()
+						.bulkInsert(
+							pgq.table,
+							mongodata.map(x => ({
+								data: JSON.stringify(x)
+							})),
+							{ transaction: tx }
+						);
 			})
 			pgq.last_error = null;
 			const now = new Date() / 1000;
