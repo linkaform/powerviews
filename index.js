@@ -9,7 +9,6 @@ var serverHost = '127.0.0.1';
 var serverPort = 8080;
 
 var validateApiKey = async (req, scopes, schema) => {
-	console.log('x-api-key', req.get('x-api-key'));
 	if (req.get('x-api-key') === config.api.key)
 		return true; // valid powerviews rest api user
 	throw { status: 403, message: 'no valid api key in X-API-KEY header provided' }
