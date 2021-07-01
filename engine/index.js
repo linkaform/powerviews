@@ -165,7 +165,7 @@ const main = async () => {
 			try {
 				pgq.state = 'error';
 				// report and save this query error but continue
-				// with remaining ones
+				// with work queue
 				pgq.last_error = e.toString();
 				pgq.last_try = new Date() / 1000;
 				await pgq.save();
