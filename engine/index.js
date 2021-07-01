@@ -153,6 +153,50 @@ const main = async () => {
 						})),
 						{ transaction: tx }
 					);
+
+				await db.sequelize.query(
+					`drop view if exists "${pgq.view}";`,
+					{ transaction: tx }
+				);
+				await db.sequelize.query(
+					`select powerviews_admin.createpview(
+						$table::regclass,
+						$view,
+						$ischema::jsonb,
+						$oschema::jsonb
+					);`,
+					{
+						bind: {
+							table: pgq.table,
+							view: pgq.view,
+							ischema: JSON.stringify((pgq.last_query || {}).input_schema || []),
+							oschema: JSON.stringify((pgq.last_query || {}).output_schema || []),
+						},
+						transaction: tx
+					}
+				);
+				await db.sequelize.query(
+					`grant select on "${pgq.view}" to "${pgq.Pguser.name}";`,
+					{ transaction: tx }
+				);
+				// try to get all data from the view to validate
+				// the flow fully, so we can catch highlevel
+				// runtime errors before our final users catch
+				// them
+				// XXX this query is specially crafted to be
+				// non-optimizable by the different postgresql
+				// layers, we don't care about the return value
+				// but we need to guarantee full data
+				// input/output parsing.
+				// Dont waste time/bandwith fetching data we
+				// dont care.
+				const [ results, metadata ] = await db.sequelize.query(
+					`select count(*), sum(length(v::text)) from "${pgq.view}" as v;`,
+					{ transaction: tx }
+				);
+				const { count, sum } = (results || [])[0];
+				console.log('count: %s, sum: %s', count, sum);
+
 			})
 			if (!mongodata.length)
 				throw 'Empty mongo response, table emptied.'
