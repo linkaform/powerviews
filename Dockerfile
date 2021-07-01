@@ -16,4 +16,4 @@ RUN apt-get update && \
     apt-get install -y \
      build-essential nodejs
 
-WORKDIR /srv/powerviews/engine
+WORKDIR /srv/powerviews

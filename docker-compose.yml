@@ -1,6 +1,8 @@
 version: '3.7'
 volumes:
+  postgres_data_1333:
   postgres_data_132:
+  postgres_data_13:
 
 networks:
   linkaform:
@@ -8,16 +10,16 @@ networks:
       name: linkaform
 
 services:
-  powerviews:
-    hostname: powerviews
-    container_name: powerviews
+  powerengine:
+    hostname: powerengine
+    container_name: powerengine
     image: linkaform/powerviews:latest
     build:
        context: ./
        dockerfile: Dockerfile
        target: develop
-    command: ["sleep", "infinity"]
-    #command: ["npm", "start"]
+    #command: ["sleep", "infinity"]
+    command: ["powerengine"]
     volumes:
         - ./:/srv/powerviews
     env_file:
@@ -26,10 +28,27 @@ services:
         - postgres
     networks:
       linkaform:
+    entrypoint: /srv/powerviews/utils/entrypoint.sh
+
+  powerviews:
+    hostname: powerviews
+    container_name: powerviews
+    image: linkaform/powerviews:latest
+    build:
+       context: ./
+       dockerfile: Dockerfile
+       target: develop
+    #command: ["sleep", "infinity"]
+    command: ["powerengine"]
+    volumes:
+        - ./:/srv/powerviews
+    depends_on:
+        - postgres
+    networks:
+      linkaform:
     ports:
       - "8080:8080"
-
-
+    entrypoint: /srv/powerviews/utils/entrypoint.sh
 
   postgres:
     image:  postgres:13-alpine
@@ -38,13 +57,11 @@ services:
     hostname: psql
     env_file:
       - ./.psql
-    # environment:
-    #     - POSTGRES_USER=powerviews_admin
-    #     - POSTGRES_PASSWORD=linkaform2018infosync
-    #     - POSTGRES_DB=powerviews
+    environment:
+        - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
-      - postgres_data_132:/var/lib/postgresql/data
-      - ./utils:/docker-entrypoint-initdb.d
+      - postgres_data_13:/var/lib/postgresql/data
+      - ./pg_utils:/docker-entrypoint-initdb.d
     networks:
       linkaform:
     ports:
