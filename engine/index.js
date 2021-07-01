@@ -143,7 +143,7 @@ const main = async () => {
 					{ transaction: tx }
 				);
 				if (mongodata.length <= 0)
-					return; -- only empty tables as asked?
+					return; // only empty tables as asked?
 
 				await db.sequelize.getQueryInterface()
 					.bulkInsert(
