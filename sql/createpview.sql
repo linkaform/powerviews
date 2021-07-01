@@ -11,7 +11,6 @@ language plpgsql as $func$
 declare
 	ischema_len int; -- len of input schema jsonb array
 	oschema_len int; -- len of output schema jsonb array
-	tmp jsonb := null;
 	ischema_key text;
 	oschema_key text;
 	ischema_val text;
@@ -45,7 +44,6 @@ begin
 	end if;
 
 	for i in 0 .. (ischema_len - 1) loop
-		--tmp = ischema -> i;
 		raise notice 'ischema[%]: %, oschema[%]: %', i, ischema -> i, i, oschema -> i;
 
 		begin
