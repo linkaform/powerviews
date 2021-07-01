@@ -142,15 +142,17 @@ const main = async () => {
 					`truncate "${pgq.table}";`,
 					{ transaction: tx }
 				);
-				if (mongodata.length > 0)
-					await db.sequelize.getQueryInterface()
-						.bulkInsert(
-							pgq.table,
-							mongodata.map(x => ({
-								data: JSON.stringify(x)
-							})),
-							{ transaction: tx }
-						);
+				if (mongodata.length <= 0)
+					return; -- only empty tables as asked?
+
+				await db.sequelize.getQueryInterface()
+					.bulkInsert(
+						pgq.table,
+						mongodata.map(x => ({
+							data: JSON.stringify(x)
+						})),
+						{ transaction: tx }
+					);
 			})
 			if (!mongodata.length)
 				throw 'Empty mongo response, table emptied.'
