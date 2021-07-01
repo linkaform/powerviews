@@ -1,6 +1,7 @@
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
 const db = require('../models');
+const trunc_string = require('../utils/trunc_string');
 const { Query } = db;
 
 const loginsingleton = {
@@ -109,7 +110,8 @@ const getpgqueries = async () => {
 		`,
 		{
 			model: Query,
-			mapToModel: Query
+			mapToModel: Query,
+			logging: (msg, time) => console.log(`${time}ms -- get worklist from postgresql`)
 		}
 	))
 	return queries;
@@ -119,18 +121,18 @@ const main = async () => {
 	// how many queries process concurrently (not in parallel)
 	const concurrency = 100;
 	const pgqueries = await getpgqueries();
-	console.log('XXXXXXXXXXXXXXXXXXXXXX');
 	//return;
 	const procpgq = async pgq => {
 		try {
 			pgq.Pguser = await pgq.getPguser();
-			console.log('working...:', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
+			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
 			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
 			await pgq.save(); // store last query in pg db
 			const mongodata = await querymongo(queryclean(pgq.last_query));
-			console.log('res size', JSON.stringify(mongodata).length);
+			console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
 			// insert into table in namespace of pguser
+			//
 			await db.sequelize.transaction(async tx => {
 				await db.sequelize.query(
 					`set local search_path = "${pgq.Pguser.name}";`,
@@ -140,13 +142,20 @@ const main = async () => {
 					`truncate "${pgq.table}";`,
 					{ transaction: tx }
 				);
+				if (mongodata.length <= 0)
+					return; -- only empty tables as asked?
+
 				await db.sequelize.getQueryInterface()
 					.bulkInsert(
 						pgq.table,
-						mongodata.map(x => ({ data: JSON.stringify(x) })),
+						mongodata.map(x => ({
+							data: JSON.stringify(x)
+						})),
 						{ transaction: tx }
 					);
 			})
+			if (!mongodata.length)
+				throw 'Empty mongo response, table emptied.'
 			pgq.last_error = null;
 			const now = new Date() / 1000;
 			pgq.state = 'success';
@@ -158,7 +167,7 @@ const main = async () => {
 			try {
 				pgq.state = 'error';
 				// report and save this query error but continue
-				// with remaining ones
+				// with work queue
 				pgq.last_error = e.toString();
 				pgq.last_try = new Date() / 1000;
 				await pgq.save();
