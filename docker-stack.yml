@@ -1,63 +1,51 @@
 version: '3.7'
-volumes:
-  postgres_data_1333:
-  postgres_data_132:
-  postgres_data_13:
 
 networks:
   linkaform:
     external:
       name: linkaform
+volumes:
+  postgres_data_13:
+
+secrets:
+  config.json:
+    external: true
 
 services:
   powerengine:
     hostname: powerengine
-    container_name: powerengine
-    image: linkaform/powerviews:develop
-    build:
-       context: ./
-       dockerfile: Dockerfile
-       target: develop
-    #command: ["sleep", "infinity"]
+    image: linkaform/powerviews:latest
     command: ["powerengine"]
-    volumes:
-        - ./:/srv/powerviews
     env_file:
         - ./.env
-    depends_on:
-        - postgres
     networks:
       linkaform:
     entrypoint: /srv/powerviews/utils/entrypoint.sh
+    secrets:
+      - config.json
 
   powerviews:
     hostname: powerviews
-    container_name: powerviews
-    image: linkaform/powerviews:develop
-    build:
-       context: ./
-       dockerfile: Dockerfile
-       target: develop
-    #command: ["sleep", "infinity"]
+    image: linkaform/powerviews:latest
     command: ["powerviews"]
-    volumes:
-        - ./:/srv/powerviews
-    depends_on:
-        - postgres
+    env_file:
+        - ./.env
     networks:
       linkaform:
     ports:
       - "8080:8080"
     entrypoint: /srv/powerviews/utils/entrypoint.sh
+    secrets:
+      - config.json
 
-  postgres:
+  pv_psql:
     image:  postgres:13-alpine
-    container_name: pv_psql
     #command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
-    hostname: psql
-    env_file:
-      - ./.psql
+    hostname: pv_psql
     environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=linkaform2018infosync
+        - POSTGRES_DB=postgres
         - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - postgres_data_13:/var/lib/postgresql/data
@@ -65,9 +53,8 @@ services:
     networks:
       linkaform:
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-d", "powerviews", "-U", "powerviews_admin"]
       interval: 5s
       retries: 5
-    restart: always

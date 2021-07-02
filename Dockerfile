@@ -17,3 +17,12 @@ RUN apt-get update && \
      build-essential nodejs
 
 WORKDIR /srv/powerviews
+
+###################################################
+#Copys all files to the container
+###################################################
+
+FROM develop AS production
+
+COPY --chown=www-data:www-data ./ /srv/powerviews/
+RUN rm -f /srv/powerviews/config/config.json
