@@ -19,4 +19,8 @@ psql  -f/dev/stdin -U $SUPERUSER $db <<SQL
 	-- we don't use privilege inheritance, but we require a method to group
 	-- powerviews postgresql users
 	CREATE ROLE powerviews_users NOINHERIT;
+	-- create objects as powerviews_admin user
+	SET ROLE powerviews_admin;
+	-- install powerviews functions
+	\i ../sql/createpview.sql
 SQL
