@@ -170,7 +170,7 @@ begin
 	-- XXX bug in oc_importe generation, not always array sometimes only
 	-- empty string
 	hack := $$where data ->> 'oc_importe' != ''$$;
-	sql := format($$create view %I as select %s from %s %s;$$, vname, array_to_string(cols, ', '), tname, hack);
+	sql := format($$create view %s as select %s from %s %s;$$, vname, array_to_string(cols, ', '), tname, hack);
 	raise notice 'sql: %', sql;
 	execute sql;
 
