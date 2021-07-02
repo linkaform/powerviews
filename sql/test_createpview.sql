@@ -39,8 +39,8 @@ select createpview('pv_1259.tbl3'::regclass, 'myview',
       { "oc_importe_2": "money__1" },
       { "oc_importe_3": "money__2" },
       { "pdf": "pv_doc__file_name" },
-      { "pdf_url": "doc__file_url" },
+      { "pdf_url": "pv_doc__file_url" },
       { "xml": "pv_doc__file_name" },
-      { "xml_url": "doc__file_url" },
+      { "xml_url": "pv_doc__file_url" },
       { "b3b": "pv_doc__file_url" }
     ]');
