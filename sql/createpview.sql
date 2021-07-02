@@ -10,7 +10,8 @@ create domain pv_doc as jsonb
 create or replace function
 isjsonbtype(typearg regtype)
 returns boolean
-language plpgsql as $func$
+language plpgsql
+as $func$
 -- receives as argument a postgresql variable representing a datatype,
 -- returns true if that datatype can be used to generate values that have a
 -- datatype that is implemented on top of regular jsonb.
@@ -40,7 +41,9 @@ $func$;
 create or replace function
 createpview(tname regclass, vname text, ischema jsonb, oschema jsonb)
 returns boolean
-language plpgsql as $func$
+language plpgsql
+set search_path from current
+as $func$
 -- create powerview, receives as input:
 --	tname: table name, guaranteed to exist
 --	vname: destination view name
