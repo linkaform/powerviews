@@ -157,7 +157,7 @@ const main = async () => {
 					);
 
 				await db.sequelize.query(
-					`drop view if exists ${fqview};`,
+					`drop view if exists "${pgq.view}";`,
 					{ transaction: tx }
 				);
 				await db.sequelize.query(
