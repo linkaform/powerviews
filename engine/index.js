@@ -134,6 +134,8 @@ const main = async () => {
 			// insert into table in namespace of pguser
 			//
 			await db.sequelize.transaction(async tx => {
+				// fully qualified view name (schema.viewname)
+				const fqview = `${pgq.Pguser.name}.${pgq.view}`;
 				await db.sequelize.query(
 					`set local search_path = "${pgq.Pguser.name}";`,
 					{ transaction: tx }
@@ -155,7 +157,7 @@ const main = async () => {
 					);
 
 				await db.sequelize.query(
-					`drop view if exists "${pgq.view}";`,
+					`drop view if exists "${fqview}";`,
 					{ transaction: tx }
 				);
 				await db.sequelize.query(
@@ -168,7 +170,7 @@ const main = async () => {
 					{
 						bind: {
 							table: pgq.table,
-							view: pgq.view,
+							view: fqview,
 							ischema: JSON.stringify((pgq.last_query || {}).input_schema || []),
 							oschema: JSON.stringify((pgq.last_query || {}).output_schema || []),
 						},
