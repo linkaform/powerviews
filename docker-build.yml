@@ -1,0 +1,37 @@
+version: '3.7'
+
+networks:
+  linkaform:
+    external:
+      name: linkaform
+
+services:
+  powerengine:
+    hostname: powerengine
+    container_name: powerengine
+    image: linkaform/powerviews:latest
+    build:
+       context: ./
+       dockerfile: Dockerfile
+       target: production
+    command: ["powerengine"]
+    env_file:
+        - ./.env
+    networks:
+      linkaform:
+    entrypoint: /srv/powerviews/utils/entrypoint.sh
+
+  powerviews:
+    hostname: powerviews
+    container_name: powerviews
+    image: linkaform/powerviews:latest
+    build:
+       context: ./
+       dockerfile: Dockerfile
+       target: production
+    command: ["powerviews"]
+    networks:
+      linkaform:
+    ports:
+      - "8080:8080"
+    entrypoint: /srv/powerviews/utils/entrypoint.sh

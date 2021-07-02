@@ -26,3 +26,30 @@ Esto va a arrancar los dos contenedores (api y engine) y de igual forma vas a la
 ```
 docker-compose up -d
 ```
+
+
+## Hacer build de la imagen para llevar a productivo
+```
+docker-compose -f docker-build.yml build  powerengine
+```
+
+#### Testing image
+docker run  -i -t linkaform/powerviews:latest
+
+
+## Running on prodcutive
+
+### Add secrets to docker service
+
+
+```
+docker secret create [docker_name] [filename or stdinput]
+docker secret create config.json config.json
+```
+
+### Add secret to service
+
+```
+docker service update lkf_powerengine --secret-add config.json
+docker service update lkf_powerviews --secret-add config.json
+```

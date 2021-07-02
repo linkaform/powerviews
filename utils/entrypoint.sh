@@ -9,7 +9,7 @@ elif [[ $(hostname) == "powerengine" || $1 == "powerengine" ]]; then
     echo "hostname: " $(hostname)
     echo "starting PowerViews Engine ...."
     cd  /srv/powerviews/utils
-    node sync_db.js
+    #node sync_db.js
     cd  /srv/powerviews/engine
 
 fi
