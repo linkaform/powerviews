@@ -126,7 +126,7 @@ begin
 			-- right hand of double underscore is digit means index
 			-- in array
 			case when match[2] ~ '^\d+$' then
-				match[2]::int + 1 -- contract is 0 based indexes but postgres uses 1 based indexes...
+				match[2]::int
 			else
 				null
 			end::int,
@@ -153,13 +153,13 @@ begin
 		if ischema_val_t::text ~ '\[\]$' and oschema_val_idx is null then
 			raise 'specified array type on input but did not requested array element on output: input: %, output: %', ischema -> i, oschema -> i;
 		elsif ischema_val_t::text ~ '\[\]$' and oschema_val_idx >= 0 then
-			cols := cols || format('(select (array_agg(el))[%L]::%s from jsonb_array_elements_text(data -> %L) as j(el)) as %I', oschema_val_idx, oschema_val_t, ischema_key, oschema_key);
+			cols := cols || format('((data -> %L) ->> %L::int)::%s as %I', ischema_key, oschema_val_idx, oschema_val_t, oschema_key);
 		-- input is jsonb or a jsonb-derived type
 		elsif isjsonbtype(ischema_val_t) then
-			cols := cols || format('((data -> %L) -> %L)::text as %I', ischema_key, oschema_val_el, oschema_key);
+			cols := cols || format('((data -> %L) ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
 		-- input is regular type
 		else
-			cols := cols || format('(data ->> %L)::text::%s as %I', ischema_key, ischema_val_t, oschema_key);
+			cols := cols || format('(data ->> %L)::%s as %I', ischema_key, ischema_val_t, oschema_key);
 		end if;
 
 	end loop;
