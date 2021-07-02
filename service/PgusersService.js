@@ -66,6 +66,12 @@ exports.pgusersIdPUT = async (body, id) => await db.sequelize.transaction(async 
 			{ transaction: tx }
 		);
 	}
+	if (body.pass && old.pass !== body.pass) {
+		await db.sequelize.query(
+			`alter role "${old.name}" password '${body.pass}';`,
+			{ transaction: tx }
+		);
+	}
 	return await cur.save({ transaction: tx });
 });
 
