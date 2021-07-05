@@ -72,7 +72,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Account'
       responses:
-        "200":
+        "204":
           $ref: '#/components/responses/AccountOK'
         default:
           $ref: '#/components/responses/Error'
@@ -146,7 +146,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Pguser'
       responses:
-        "200":
+        "204":
           $ref: '#/components/responses/PguserOK'
         default:
           $ref: '#/components/responses/Error'
@@ -240,7 +240,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Query'
       responses:
-        "200":
+        "204":
           $ref: '#/components/responses/QueryOK'
         default:
           $ref: '#/components/responses/Error'
