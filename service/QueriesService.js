@@ -1,7 +1,7 @@
 'use strict';
 
 const db = require('../models');
-const { Query } = db;
+const { Query, Pguser } = db;
 
 const Error = require('../structs/Error');
 
@@ -87,3 +87,23 @@ exports.queriesIdRefreshPUT = async id => await db.sequelize.transaction(async t
 	cur.state = 'inqueue';
 	return await cur.save({ transaction: tx });
 });
+
+/**
+ * Get list of queries that match a given script_id, include full pgusers data
+ *
+ * id Integer
+ * returns Query
+ **/
+exports.queriesScript_idIdGET = async id => {
+	const r = await Query.findAll({
+		where: {
+			script_id: id
+		},
+		include: [
+			Pguser
+		]
+	});
+	if (!r || !Array.isArray(r) || r.length <= 0)
+		throw new Error('ENOENT');
+	return r;
+}
