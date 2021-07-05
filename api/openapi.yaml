@@ -170,6 +170,26 @@ paths:
         default:
           $ref: '#/components/responses/Error'
       x-swagger-router-controller: Pgusers
+  /pgusers/by/account_id/{id}:
+    get:
+      tags:
+      - pgusers
+      summary: receives as argument a account_id, returns an array containing the list of pgusers matching that account_id
+      operationId: pgusersAccount_idIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/ArrayOfPguserOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Pgusers
   /queries/:
     post:
       tags:
@@ -370,6 +390,10 @@ components:
         pass: ""
         name: pv_1259
         desc: desc
+    ArrayOfPguser:
+      type: array
+      items:
+        $ref: '#/components/schemas/Pguser'
     Query:
       required:
       - id
@@ -483,6 +507,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Pguser'
+    ArrayOfPguserOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArrayOfPguser'
     QueryOK:
       description: OK
       content:

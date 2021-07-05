@@ -38,3 +38,11 @@ module.exports.pgusersPOST = async (req, res, next, body) => {
     utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
   }
 };
+module.exports.pgusersAccount_idIdGET = async (req, res, next, id) => {
+  try {
+    const response = await Pgusers.pgusersAccount_idIdGET(id);
+    utils.writeJson(res, response, 200);
+  } catch (e) {
+    utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
+  }
+};
