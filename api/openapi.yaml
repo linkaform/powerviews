@@ -325,7 +325,7 @@ components:
           example: 100
         name:
           maxLength: 64
-          pattern: ^pv_.+$
+          pattern: ^pv_[a-zA-Z0-9]+$
           type: string
           description: "user name that endusers will use to connect to PostgreSQL,\
             \ must start with prefix pv_ and must be unique across the PostgreSQL\
@@ -400,12 +400,14 @@ components:
             \ fetched from mongodb will be stored, this tables are not exposed to\
             \ Pgusers"
           readOnly: true
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]+$
         view:
           maxLength: 64
           type: string
           description: "user-facing name of view that will be shown to client connections\
             \ and/or Power BI, you can specify a pretty name here if desired, otherwise,\
             \ a default automatically generated value is used"
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]+$
         refresh:
           minimum: 60
           type: integer
