@@ -82,6 +82,8 @@ exports.queriesPOST = async body => await db.sequelize.transaction(async tx => {
  **/
 exports.queriesIdRefreshPUT = async id => await db.sequelize.transaction(async tx => {
 	const cur = await Query.findByPk(id, { transaction: tx });
+	if (!cur)
+		throw new Error('ENOENT');
 	cur.state = 'inqueue';
 	return await cur.save({ transaction: tx });
 });
