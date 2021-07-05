@@ -39,9 +39,9 @@ module.exports.queriesPOST = async (req, res, next, body) => {
   }
 };
 
-module.exports.queriesIdRefreshPUT = async (req, res, next, body, id) => {
+module.exports.queriesIdRefreshPUT = async (req, res, next, id) => {
   try {
-    const response = await Queries.queriesIdPUT(id);
+    const response = await Queries.queriesIdRefreshPUT(id);
     utils.writeJson(res, response, 204);
   } catch (e) {
     utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
