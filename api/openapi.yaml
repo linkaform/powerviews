@@ -244,6 +244,26 @@ paths:
         default:
           $ref: '#/components/responses/Error'
       x-swagger-router-controller: Queries
+  /queries/{id}/refresh:
+    put:
+      tags:
+      - queries
+      summary: "Refresh query as soon as possible: put query in queue to be processed at the next loop of the engine"
+      operationId: queriesIdRefreshPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          $ref: '#/components/responses/QueryOK'
+        default:
+          $ref: '#/components/responses/Error'
+      x-swagger-router-controller: Queries
 components:
   schemas:
     Error:

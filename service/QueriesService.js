@@ -73,3 +73,15 @@ exports.queriesPOST = async body => await db.sequelize.transaction(async tx => {
 	await db.sequelize.query(`grant select on table "${pguser.name}"."${r.table}" to "${pguser.name}";`, { transaction: tx });
 	return r;
 })
+
+/**
+ * queue a given query for process as soon as possible
+ *
+ * id Integer
+ * returns Query
+ **/
+exports.queriesIdRefreshPUT = async id => await db.sequelize.transaction(async tx => {
+	const cur = await Query.findByPk(id, { transaction: tx });
+	cur.state = 'inqueue';
+	return await cur.save({ transaction: tx });
+});
