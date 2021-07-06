@@ -43,13 +43,10 @@ const queryclean = json => {
 	}
 };
 
-const dologin = async () => {
+const dologin = async (username, api_key) => {
 	if (loginsingleton.success && loginsingleton.expires > new Date())
 		return loginsingleton.jwt;
-	const body = {
-		username: LKFPOWERVIEWSENGINELOGINUSER,
-		api_key: LKFPOWERVIEWSENGINELOGINAPIKEY
-	};
+	const body = { username, api_key };
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
 	const res = await fetch(url, {
 		method: 'post',
@@ -127,7 +124,10 @@ const main = async () => {
 			pgq.Pguser = await pgq.getPguser();
 			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
-			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
+			pgq.last_query = await getqueryres(
+				(await dologin(LKFPOWERVIEWSENGINELOGINUSER, LKFPOWERVIEWSENGINELOGINAPIKEY)),
+				pgq.script_id
+			);
 			await pgq.save(); // store last query in pg db
 			const mongodata = await querymongo(queryclean(pgq.last_query));
 			console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
