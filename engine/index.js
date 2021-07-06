@@ -45,6 +45,7 @@ const queryclean = json => {
 
 const dologin = async (username, api_key) => {
 	const body = { username, api_key };
+	console.log('dologin', username, api_key);
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
 	const res = await fetch(url, {
 		method: 'post',
@@ -117,10 +118,11 @@ const main = async () => {
 	const procpgq = async pgq => {
 		try {
 			pgq.Pguser = await pgq.getPguser();
+			pgq.Pguser.Account = await pgq.Pguser.getAccount();
 			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
 			pgq.last_query = await getqueryres(
-				(await dologin(LKFPOWERVIEWSENGINELOGINUSER, LKFPOWERVIEWSENGINELOGINAPIKEY)),
+				(await dologin(pgq.Pguser.Account.email, pgq.Pguser.Account.apikey)),
 				pgq.script_id
 			);
 			await pgq.save(); // store last query in pg db
