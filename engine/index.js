@@ -44,8 +44,6 @@ const queryclean = json => {
 };
 
 const dologin = async (username, api_key) => {
-	if (loginsingleton.success && loginsingleton.expires > new Date())
-		return loginsingleton.jwt;
 	const body = { username, api_key };
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
 	const res = await fetch(url, {
@@ -56,10 +54,7 @@ const dologin = async (username, api_key) => {
 	const json = await res.json();
 	if (!json.success)
 		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
-	loginsingleton.jwt = json.jwt;
-	loginsingleton.success = json.success;
-	loginsingleton.expires = new Date() + 3600 * 1000; // 1 hour
-	return loginsingleton.jwt;
+	return json.jwt;
 };
 
 const getqueryres = async (jwt, script_id) => {
