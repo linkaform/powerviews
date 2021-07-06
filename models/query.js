@@ -105,6 +105,12 @@ module.exports = (sequelize, DataTypes) => {
 				await sequelize.query(
 					`create index "queries_last_try_retry_idx" on queries ((last_try + retry) desc);`
 				);
+				await sequelize.query(
+					`alter table queries add constraint "invalid queries.tablename" check (tablename ~ '^[a-zA-Z][a-zA-Z0-9_]+$');`
+				);
+				await sequelize.query(
+					`alter table queries add constraint "invalid queries.viewname" check (viewname ~ '^[a-zA-Z][a-zA-Z0-9_]+$');`
+				);
 			}
 		}
 	});

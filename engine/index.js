@@ -10,14 +10,12 @@ const loginsingleton = {
 	expires: 0 // timestamp in ms when this token expires
 };
 
-let LKFPOWERVIEWSENGINELOGINUSER;
-let LKFPOWERVIEWSENGINELOGINAPIKEY;
 let LKFPOWERVIEWSENGINEMONGOURL;
 
 const getconfig = () => {
-	({ LKFPOWERVIEWSENGINELOGINUSER, LKFPOWERVIEWSENGINELOGINAPIKEY, LKFPOWERVIEWSENGINEMONGOURL } = process.env);
-	if (!LKFPOWERVIEWSENGINELOGINUSER || !LKFPOWERVIEWSENGINELOGINAPIKEY || !LKFPOWERVIEWSENGINEMONGOURL)
-		throw 'error LKFPOWERVIEWSENGINELOGINUSER, LKFPOWERVIEWSENGINELOGINAPIKEY and LKFPOWERVIEWSENGINEMONGOURL variables required in engine environment'
+	({ LKFPOWERVIEWSENGINEMONGOURL } = process.env);
+	if (!LKFPOWERVIEWSENGINEMONGOURL)
+		throw 'error LKFPOWERVIEWSENGINEMONGOURL variable required in engine environment'
 }
 
 const queryclean = json => {
@@ -43,13 +41,9 @@ const queryclean = json => {
 	}
 };
 
-const dologin = async () => {
-	if (loginsingleton.success && loginsingleton.expires > new Date())
-		return loginsingleton.jwt;
-	const body = {
-		username: LKFPOWERVIEWSENGINELOGINUSER,
-		api_key: LKFPOWERVIEWSENGINELOGINAPIKEY
-	};
+const dologin = async (username, api_key) => {
+	const body = { username, api_key };
+	console.log('dologin', username, api_key);
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
 	const res = await fetch(url, {
 		method: 'post',
@@ -59,10 +53,7 @@ const dologin = async () => {
 	const json = await res.json();
 	if (!json.success)
 		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
-	loginsingleton.jwt = json.jwt;
-	loginsingleton.success = json.success;
-	loginsingleton.expires = new Date() + 3600 * 1000; // 1 hour
-	return loginsingleton.jwt;
+	return json.jwt;
 };
 
 const getqueryres = async (jwt, script_id) => {
@@ -125,9 +116,13 @@ const main = async () => {
 	const procpgq = async pgq => {
 		try {
 			pgq.Pguser = await pgq.getPguser();
+			pgq.Pguser.Account = await pgq.Pguser.getAccount();
 			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
 			pgq.state = 'working';
-			pgq.last_query = await getqueryres((await dologin()), pgq.script_id);
+			pgq.last_query = await getqueryres(
+				(await dologin(pgq.Pguser.Account.email, pgq.Pguser.Account.apikey)),
+				pgq.script_id
+			);
 			await pgq.save(); // store last query in pg db
 			const mongodata = await querymongo(queryclean(pgq.last_query));
 			console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
@@ -157,7 +152,7 @@ const main = async () => {
 					);
 
 				await db.sequelize.query(
-					`drop view if exists ${fqview};`,
+					`drop view if exists "${pgq.view}";`,
 					{ transaction: tx }
 				);
 				await db.sequelize.query(

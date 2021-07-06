@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
 			allowNull: false,
 			unique: true,
 			validate: {
-				is: /^pv_.+$/
+				is: /^pv_[a-zA-Z0-9]+$/
 			}
 		},
 		pass: {
@@ -60,6 +60,13 @@ module.exports = (sequelize, DataTypes) => {
 	}, {
 		sequelize,
 		modelName: 'Pguser',
+		hooks: {
+			afterSync: async () => {
+				await sequelize.query(
+					`alter table pgusers add constraint "invalid pgusers.name" check (name ~ '^pv_[a-zA-Z0-9_]+$');`
+				);
+			}
+		}
 	});
 	return Pguser;
 };

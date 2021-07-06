@@ -63,7 +63,6 @@ declare
 	cols text[] := array[]::text[];
 	sql text := '';
 	keyvalregex text := '^[a-zA-Z][a-zA-Z0-9_]+$';
-	hack text := '';
 begin
 	if vname is null then
 		raise 'vname is null';
@@ -167,10 +166,7 @@ begin
 
 	end loop;
 
-	-- XXX bug in oc_importe generation, not always array sometimes only
-	-- empty string
-	hack := $$where data ->> 'oc_importe' != ''$$;
-	sql := format($$create view %I as select %s from %s %s;$$, vname, array_to_string(cols, ', '), tname, hack);
+	sql := format($$create view %s as select %s from %s;$$, vname, array_to_string(cols, ', '), tname);
 	raise notice 'sql: %', sql;
 	execute sql;
 

@@ -66,6 +66,12 @@ exports.pgusersIdPUT = async (body, id) => await db.sequelize.transaction(async 
 			{ transaction: tx }
 		);
 	}
+	if (body.pass && old.pass !== body.pass) {
+		await db.sequelize.query(
+			`alter role "${old.name}" password '${body.pass}';`,
+			{ transaction: tx }
+		);
+	}
 	return await cur.save({ transaction: tx });
 });
 
@@ -96,3 +102,20 @@ exports.pgusersPOST = async body => await db.sequelize.transaction(async tx => {
 	);
 	return pgu;
 });
+
+/**
+ * returns array of pgusers matching a given account_id
+ *
+ * id Integer 
+ * returns Pguser
+ **/
+exports.pgusersAccount_idIdGET = async id => {
+	const r = await Pguser.findAll({
+		where: {
+			account_id: id
+		}
+	});
+	if (!r || !Array.isArray(r) || r.length <= 0)
+		throw new Error('ENOENT');
+	return r;
+}

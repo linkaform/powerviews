@@ -38,3 +38,22 @@ module.exports.queriesPOST = async (req, res, next, body) => {
     utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
   }
 };
+
+module.exports.queriesIdRefreshPUT = async (req, res, next, id) => {
+  try {
+    const response = await Queries.queriesIdRefreshPUT(id);
+    utils.writeJson(res, response, 204);
+  } catch (e) {
+    utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
+  }
+};
+
+module.exports.queriesScript_idIdGET = async (req, res, next, id) => {
+  try {
+	  console.log('id', id);
+    const response = await Queries.queriesScript_idIdGET(id);
+    utils.writeJson(res, response, 200);
+  } catch (e) {
+    utils.writeJson(res, e, e.error_code === 'ENOENT' ? 404 : 400);
+  }
+};
