@@ -51,14 +51,16 @@ services:
     entrypoint: /srv/powerviews/utils/entrypoint.sh
 
   postgres:
-    image:  postgres:13-alpine
+    image: linkaform/postgres:13-alpine
+    build:
+       context: ./
+       dockerfile: Dockerfile_pg
+       target: develop
     container_name: pv_psql
     #command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
     hostname: psql
     env_file:
       - ./.psql
-    environment:
-        - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - postgres_data_13:/var/lib/postgresql/data
       - ./pg_utils:/docker-entrypoint-initdb.d

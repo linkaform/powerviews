@@ -34,8 +34,9 @@ docker-compose -f docker-build.yml build  powerengine
 ```
 
 #### Testing image
+```
 docker run  -i -t linkaform/powerviews:latest
-
+```
 
 ## Running on prodcutive
 

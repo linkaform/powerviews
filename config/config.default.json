@@ -10,7 +10,7 @@
     },
     "api": {
       "key": null,
-      "connstr_base": "postgresql://pv_psql:5432/powerviews"
+      "connstr_base": "postgresql://preprod.linkaform.com:5432/powerviews"
     }
   },
   "test": {
