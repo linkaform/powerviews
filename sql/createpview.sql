@@ -161,7 +161,7 @@ begin
 			cols := cols || format('((data -> %L) ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
 		-- input is regular type
 		else
-			cols := cols || format('(data ->> %L)::%s as %I', ischema_key, ischema_val_t, oschema_key);
+			cols := cols || format('(data ->> %L)::%s as %I', ischema_key, oschema_val_t, oschema_key);
 		end if;
 
 	end loop;
