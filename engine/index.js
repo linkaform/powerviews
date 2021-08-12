@@ -4,12 +4,6 @@ const db = require('../models');
 const trunc_string = require('../utils/trunc_string');
 const { Query } = db;
 
-const loginsingleton = {
-	jwt: '',
-	success: false,
-	expires: 0 // timestamp in ms when this token expires
-};
-
 let LKFPOWERVIEWSENGINEMONGOURL;
 
 const getconfig = () => {
