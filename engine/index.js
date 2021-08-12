@@ -102,115 +102,116 @@ const getpgqueries = async () => {
 	return queries;
 };
 
+const procpgq = async pgq => {
+	try {
+		pgq.Pguser = await pgq.getPguser();
+		pgq.Pguser.Account = await pgq.Pguser.getAccount();
+		console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
+		pgq.state = 'working';
+		pgq.last_query = await getqueryres(
+			(await dologin(pgq.Pguser.Account.email, pgq.Pguser.Account.apikey)),
+			pgq.script_id
+		);
+		await pgq.save(); // store last query in pg db
+		const mongodata = await querymongo(queryclean(pgq.last_query));
+		console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
+		// insert into table in namespace of pguser
+		//
+		await db.sequelize.transaction(async tx => {
+			// fully qualified view name (schema.viewname)
+			const fqview = `${pgq.Pguser.name}.${pgq.view}`;
+			await db.sequelize.query(
+				`set local search_path = "${pgq.Pguser.name}";`,
+				{ transaction: tx }
+			);
+			await db.sequelize.query(
+				`truncate "${pgq.table}";`,
+				{ transaction: tx }
+			);
+			if (mongodata.length <= 0)
+				return; // only empty tables as asked?
+
+			await db.sequelize.getQueryInterface()
+				.bulkInsert(
+					pgq.table,
+					mongodata.map(x => ({
+						data: JSON.stringify(x)
+					})),
+					{ transaction: tx }
+				);
+
+			await db.sequelize.query(
+				`drop view if exists "${pgq.view}";`,
+				{ transaction: tx }
+			);
+			await db.sequelize.query(
+				`select powerviews_admin.createpview(
+					$table::regclass,
+					$view,
+					$ischema::jsonb,
+					$oschema::jsonb
+				);`,
+				{
+					bind: {
+						table: pgq.table,
+						view: fqview,
+						ischema: JSON.stringify((pgq.last_query || {}).input_schema || []),
+						oschema: JSON.stringify((pgq.last_query || {}).output_schema || []),
+					},
+					transaction: tx
+				}
+			);
+			await db.sequelize.query(
+				`grant select on "${pgq.view}" to "${pgq.Pguser.name}";`,
+				{ transaction: tx }
+			);
+			// try to get all data from the view to validate
+			// the flow fully, so we can catch highlevel
+			// runtime errors before our final users catch
+			// them
+			// XXX this query is specially crafted to be
+			// non-optimizable by the different postgresql
+			// layers, we don't care about the return value
+			// but we need to guarantee full data
+			// input/output parsing.
+			// Dont waste time/bandwith fetching data we
+			// dont care.
+			const [ results, metadata ] = await db.sequelize.query(
+				`select count(*), sum(length(v::text)) from "${pgq.view}" as v;`,
+				{ transaction: tx }
+			);
+			const { count, sum } = (results || [])[0];
+			console.log('count: %s, sum: %s', count, sum);
+
+		})
+		if (!mongodata.length)
+			throw 'Empty mongo response, table emptied.'
+		pgq.last_error = null;
+		const now = new Date() / 1000;
+		pgq.state = 'success';
+		pgq.last_refresh = now;
+		pgq.last_try = now;
+		await pgq.save();
+	} catch (e) {
+		console.log(e);
+		try {
+			pgq.state = 'error';
+			// report and save this query error but continue
+			// with work queue
+			pgq.last_error = e.toString();
+			pgq.last_try = new Date() / 1000;
+			await pgq.save();
+		} catch (e) {
+			console.log(e);
+		}
+	}
+};
+
 const main = async () => {
 	// how many queries process concurrently (not in parallel)
 	const concurrency = 100;
 	const pgqueries = await getpgqueries();
 	//return;
-	const procpgq = async pgq => {
-		try {
-			pgq.Pguser = await pgq.getPguser();
-			pgq.Pguser.Account = await pgq.Pguser.getAccount();
-			console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
-			pgq.state = 'working';
-			pgq.last_query = await getqueryres(
-				(await dologin(pgq.Pguser.Account.email, pgq.Pguser.Account.apikey)),
-				pgq.script_id
-			);
-			await pgq.save(); // store last query in pg db
-			const mongodata = await querymongo(queryclean(pgq.last_query));
-			console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
-			// insert into table in namespace of pguser
-			//
-			await db.sequelize.transaction(async tx => {
-				// fully qualified view name (schema.viewname)
-				const fqview = `${pgq.Pguser.name}.${pgq.view}`;
-				await db.sequelize.query(
-					`set local search_path = "${pgq.Pguser.name}";`,
-					{ transaction: tx }
-				);
-				await db.sequelize.query(
-					`truncate "${pgq.table}";`,
-					{ transaction: tx }
-				);
-				if (mongodata.length <= 0)
-					return; // only empty tables as asked?
-
-				await db.sequelize.getQueryInterface()
-					.bulkInsert(
-						pgq.table,
-						mongodata.map(x => ({
-							data: JSON.stringify(x)
-						})),
-						{ transaction: tx }
-					);
-
-				await db.sequelize.query(
-					`drop view if exists "${pgq.view}";`,
-					{ transaction: tx }
-				);
-				await db.sequelize.query(
-					`select powerviews_admin.createpview(
-						$table::regclass,
-						$view,
-						$ischema::jsonb,
-						$oschema::jsonb
-					);`,
-					{
-						bind: {
-							table: pgq.table,
-							view: fqview,
-							ischema: JSON.stringify((pgq.last_query || {}).input_schema || []),
-							oschema: JSON.stringify((pgq.last_query || {}).output_schema || []),
-						},
-						transaction: tx
-					}
-				);
-				await db.sequelize.query(
-					`grant select on "${pgq.view}" to "${pgq.Pguser.name}";`,
-					{ transaction: tx }
-				);
-				// try to get all data from the view to validate
-				// the flow fully, so we can catch highlevel
-				// runtime errors before our final users catch
-				// them
-				// XXX this query is specially crafted to be
-				// non-optimizable by the different postgresql
-				// layers, we don't care about the return value
-				// but we need to guarantee full data
-				// input/output parsing.
-				// Dont waste time/bandwith fetching data we
-				// dont care.
-				const [ results, metadata ] = await db.sequelize.query(
-					`select count(*), sum(length(v::text)) from "${pgq.view}" as v;`,
-					{ transaction: tx }
-				);
-				const { count, sum } = (results || [])[0];
-				console.log('count: %s, sum: %s', count, sum);
-
-			})
-			if (!mongodata.length)
-				throw 'Empty mongo response, table emptied.'
-			pgq.last_error = null;
-			const now = new Date() / 1000;
-			pgq.state = 'success';
-			pgq.last_refresh = now;
-			pgq.last_try = now;
-			await pgq.save();
-		} catch (e) {
-			console.log(e);
-			try {
-				pgq.state = 'error';
-				// report and save this query error but continue
-				// with work queue
-				pgq.last_error = e.toString();
-				pgq.last_try = new Date() / 1000;
-				await pgq.save();
-			} catch (e) {
-				console.log(e);
-			}
-		}
-	}
 	for (let i = 0; i < pgqueries.length; i += concurrency) {
 		const tmp = pgqueries.slice(i, i + concurrency);
 		await Promise.all(tmp.map(t => procpgq(t)));
