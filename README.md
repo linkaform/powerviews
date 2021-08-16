@@ -37,7 +37,13 @@ To start the powerviews REST API server, you need first to create postgresql
 database, database user and populate empty schema; there's a helper for that:
 
 ```
-sh ./utils/setup_pg.sh
+sh ./pg_utils/setup_pg.sh
+```
+
+#### Populate database schema
+
+```
+node ./utils/sync_db.js
 ```
 
 Then start api server:
