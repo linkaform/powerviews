@@ -1,10 +1,10 @@
+* createpview() support json in addition to jsonb
 * create powerviews db in dbp3/4
 * sync view to table in user schema
 	* depends on lkf api returning schema key including necessary
 	  transformations
 * good main loop in engine: pubsub
-* josepato: dockerize
-* powerviews will add account id to db name
+* powerviews will add account id to db name when querying mongo
 * josepato: lkf api will send dbname without account suffix
 * josepato: create super-read-only-user in mongo for powerviews
 * engine connect to replica set not isolated host
