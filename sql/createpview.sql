@@ -8,6 +8,37 @@ create domain pv_doc as jsonb
 	;
 
 create or replace function
+isjsontype(typearg regtype)
+returns boolean
+language plpgsql
+as $func$
+-- receives as argument a postgresql variable representing a datatype,
+-- returns true if that datatype can be used to generate values that have a
+-- datatype that is implemented on top of regular json.
+-- returns false otherwise.
+--
+-- this function is specially useful to detect domains that are implemented on
+-- top of the regular json to add constraints.
+--
+-- Example:
+-- 	isjsontype('pv_doc'::regtype) -- returns true
+-- 	isjsontype('json'::regtype) -- returns true
+-- 	isjsontype('jsonb'::regtype) -- returns false
+-- 	isjsontype('timestamptz'::regtype) -- returns false
+-- 	isjsontype('string'::regtype) -- returns false
+declare
+	res boolean := false;
+begin
+	execute format('select json_typeof(null::%s) is null;', typearg) into strict res;
+	return res;
+exception
+	when syntax_error_or_access_rule_violation then
+		raise notice '%', sqlerrm; -- debug
+		return false;
+end;
+$func$;
+
+create or replace function
 isjsonbtype(typearg regtype)
 returns boolean
 language plpgsql
@@ -22,8 +53,8 @@ as $func$
 --
 -- Example:
 -- 	isjsonbtype('pv_doc'::regtype) -- returns true
--- 	isjsonbtype('jsonb'::regtype) -- returns true
 -- 	isjsonbtype('json'::regtype) -- returns false
+-- 	isjsonbtype('jsonb'::regtype) -- returns true
 -- 	isjsonbtype('timestamptz'::regtype) -- returns false
 -- 	isjsonbtype('string'::regtype) -- returns false
 declare
@@ -157,7 +188,7 @@ begin
 		elsif ischema_val_t::text ~ '\[\]$' and oschema_val_idx >= 0 then
 			cols := cols || format('((data -> %L) ->> %L::int)::%s as %I', ischema_key, oschema_val_idx, oschema_val_t, oschema_key);
 		-- input is jsonb or a jsonb-derived type
-		elsif isjsonbtype(ischema_val_t) then
+		elsif isjsontype(ischema_val_t) or isjsonbtype(ischema_val_t) then
 			cols := cols || format('((data -> %L) ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
 		-- input is regular type
 		else
