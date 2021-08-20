@@ -55,7 +55,7 @@ npm start
 To run the powerviews engine, you need to configure some environment variables (fill them with real values) and run:
 
 ```
-cd engine && env LKFPOWERVIEWSENGINELOGINUSER="example@info-sync.com" LKFPOWERVIEWSENGINELOGINPASS=yoursecretpass LKFPOWERVIEWSENGINEMONGOURL="mongodb://user:pass@host:port/admin" npm start
+cd engine && env LKFPOWERVIEWSENGINEMONGOURL="mongodb://user:pass@host:port/admin" npm start
 ```
 
 To view the Swagger UI interface for the REST API:

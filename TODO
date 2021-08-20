@@ -1,5 +1,4 @@
 * createpview() support json in addition to jsonb
-* correctly send jwt
 * couchdb support
 * create powerviews db in dbp3/4
 * sync view to table in user schema

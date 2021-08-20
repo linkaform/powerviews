@@ -55,7 +55,10 @@ const getqueryres = async (jwt, script_id) => {
 	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify({ script_id: script_id}),
-		headers: { 'content-type': 'application/json' }
+		headers: {
+			'content-type': 'application/json',
+			'authorization': `jwt ${jwt}`,
+		}
 	});
 	const json = await res.json();
 	if (!json.success)
