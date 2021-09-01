@@ -93,7 +93,8 @@ declare
 	oschema_val_el text; -- output schema key of element inside object
 	cols text[] := array[]::text[];
 	sql text := '';
-	keyvalregex text := '^[a-zA-Z][a-zA-Z0-9_]+$';
+	ikeyregex text := '^[a-zA-Z][a-zA-Z0-9_]+$'; -- regex for keys in input schema
+	keyvalregex text := '^[a-zA-Z][a-zA-Z0-9_]+$'; -- regex for keys and values of everything else
 begin
 	if vname is null then
 		raise 'vname is null';
@@ -141,7 +142,7 @@ begin
 				raise 'cannot get valid key-value pair from oschema[%] element (%): %', i, oschema -> i, sqlerrm;
 		end;
 
-		if ischema_key !~ keyvalregex then
+		if ischema_key !~ ikeyregex then
 			raise 'invalid ischema_key: %', ischema_key;
 		elsif ischema_val !~ keyvalregex then
 			raise 'invalid ischema_val: %', ischema_val;
@@ -151,6 +152,7 @@ begin
 			raise 'invalid oschema_val: %', oschema_val;
 		end if;
 
+		ischema_val := regexp_replace(ischema_val, '^array_(.+?)(?:__.+)?$', '\1[]');
 		-- transform arrays to something postgresql can understand
 		ischema_val := regexp_replace(ischema_val, '^array_(.+?)(?:__.+)?$', '\1[]');
 
@@ -192,7 +194,7 @@ begin
 			cols := cols || format('((data -> %L) ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
 		-- input is regular type
 		else
-			cols := cols || format('(data ->> %L)::%s as %I', ischema_key, oschema_val_t, oschema_key);
+			cols := cols || format('(data -> %L)::text::%s as %I', ischema_key, oschema_val_t, oschema_key);
 		end if;
 
 	end loop;
