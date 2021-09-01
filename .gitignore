@@ -3,3 +3,5 @@ node_modules
 runengine.sh
 # ignore local changes to config, use config/config.default.json for tracking
 config/config.json
+# used for devel testing
+utils/getjwt
