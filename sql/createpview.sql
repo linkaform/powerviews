@@ -191,7 +191,6 @@ begin
 			raise 'invalid oschema_val: %', oschema_val;
 		end if;
 
-		ischema_val := regexp_replace(ischema_val, '^array_(.+?)(?:__.+)?$', '\1[]');
 		-- transform arrays to something postgresql can understand
 		ischema_val := regexp_replace(ischema_val, '^array_(.+?)(?:__.+)?$', '\1[]');
 
