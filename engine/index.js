@@ -1,15 +1,19 @@
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
+const urlparse = require('url-parse');
 const db = require('../models');
 const trunc_string = require('../utils/trunc_string');
 const { Query } = db;
 
 let LKFPOWERVIEWSENGINEMONGOURL;
+let LKFPOWERVIEWSENGINECOUCHURL;
 
 const getconfig = () => {
-	({ LKFPOWERVIEWSENGINEMONGOURL } = process.env);
+	({ LKFPOWERVIEWSENGINEMONGOURL, LKFPOWERVIEWSENGINECOUCHURL  } = process.env);
 	if (!LKFPOWERVIEWSENGINEMONGOURL)
 		throw 'error LKFPOWERVIEWSENGINEMONGOURL variable required in engine environment'
+	if (!LKFPOWERVIEWSENGINECOUCHURL)
+		throw 'error LKFPOWERVIEWSENGINECOUCHURL variable required in engine environment'
 }
 
 const queryclean = json => {
@@ -71,7 +75,7 @@ const querymongo = async data => {
 	const url = LKFPOWERVIEWSENGINEMONGOURL;
 	const client = await MongoClient.connect(url);
 
-	//console.log('data', JSON.stringify(data, null, "  "));
+	//console.log('querymongo data', JSON.stringify(data, null, "  "));
 	const db = client.db(data.db_name);
 	try {
 		const res = db.collection(data.collection)[data.command](data.query);
@@ -79,6 +83,30 @@ const querymongo = async data => {
 	} finally {
 		client.close();
 	}
+};
+
+const querycouch = async data => {
+	const baseurl = LKFPOWERVIEWSENGINECOUCHURL;
+	const cleandb_name = data.db_name.replace(/\s+/g, ''); // XXX hack
+	let url = `${baseurl}/${cleandb_name}/${data.command}`;
+
+	//console.log('querycouch url', url, 'data', JSON.stringify(data, null, "  "));
+	const res = await fetch(url, {
+		method: 'post',
+		body: JSON.stringify(data.query),
+		headers: { 'content-type': 'application/json' }
+	});
+	if (!res.ok) {
+		console.log('status', res.status);
+		console.log('headers', res.headers);
+		throw await res.text();
+	}
+	const json = await res.json();
+	if (!json.docs)
+		throw 'no docs field in couch response';
+	if (!Array.isArray(json.docs))
+		throw 'docs field is not array in couch response';
+	return json.docs;
 };
 
 // gets array of work to do from postgresql
@@ -117,8 +145,13 @@ const procpgq = async pgq => {
 			pgq.script_id
 		);
 		await pgq.save(); // store last query in pg db
-		const mongodata = await querymongo(queryclean(pgq.last_query));
-		console.log('mongodata response, size: ', JSON.stringify(mongodata).length, 'data: ', trunc_string(JSON.stringify(mongodata)));
+		let dbdata;
+		if (pgq.last_query.type === 'couchdb') {
+			dbdata = await querycouch(pgq.last_query);
+		} else {
+			dbdata = await querymongo(queryclean(pgq.last_query));
+		}
+		console.log('dbdata response, size: ', JSON.stringify(dbdata).length, 'data: ', trunc_string(JSON.stringify(dbdata)));
 		// insert into table in namespace of pguser
 		//
 		await db.sequelize.transaction(async tx => {
@@ -132,13 +165,13 @@ const procpgq = async pgq => {
 				`truncate "${pgq.table}";`,
 				{ transaction: tx }
 			);
-			if (mongodata.length <= 0)
+			if (dbdata.length <= 0)
 				return; // only empty tables as asked?
 
 			await db.sequelize.getQueryInterface()
 				.bulkInsert(
 					pgq.table,
-					mongodata.map(x => ({
+					dbdata.map(x => ({
 						data: JSON.stringify(x)
 					})),
 					{ transaction: tx }
@@ -188,8 +221,8 @@ const procpgq = async pgq => {
 			console.log('count: %s, sum: %s', count, sum);
 
 		})
-		if (!mongodata.length)
-			throw 'Empty mongo response, table emptied.'
+		if (!dbdata.length)
+			throw 'Empty database response, table emptied.'
 		pgq.last_error = null;
 		const now = new Date() / 1000;
 		pgq.state = 'success';
