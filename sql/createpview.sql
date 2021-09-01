@@ -181,6 +181,7 @@ begin
 		-- convert to proper postgresql datatype
 		oschema_val_t := oschema_val::regtype;
 
+		ischema_key := format('(data -> %L)', ischema_key);
 		raise notice 'ischema_key: %, ischema_val_t: %', ischema_key, ischema_val_t;
 		raise notice 'oschema_key: %, oschema_val_t: %, oschema_val_idx: %, oschema_val_el: %', oschema_key, oschema_val_t, oschema_val_idx, oschema_val_el;
 
@@ -188,13 +189,13 @@ begin
 		if ischema_val_t::text ~ '\[\]$' and oschema_val_idx is null then
 			raise 'specified array type on input but did not requested array element on output: input: %, output: %', ischema -> i, oschema -> i;
 		elsif ischema_val_t::text ~ '\[\]$' and oschema_val_idx >= 0 then
-			cols := cols || format('((data -> %L) ->> %L::int)::%s as %I', ischema_key, oschema_val_idx, oschema_val_t, oschema_key);
+			cols := cols || format('(%s ->> %L::int)::%s as %I', ischema_key, oschema_val_idx, oschema_val_t, oschema_key);
 		-- input is jsonb or a jsonb-derived type
 		elsif isjsontype(ischema_val_t) or isjsonbtype(ischema_val_t) then
-			cols := cols || format('((data -> %L) ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
+			cols := cols || format('(%s ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
 		-- input is regular type
 		else
-			cols := cols || format('(data -> %L)::text::%s as %I', ischema_key, oschema_val_t, oschema_key);
+			cols := cols || format('%s::text::%s as %I', ischema_key, oschema_val_t, oschema_key);
 		end if;
 
 	end loop;
