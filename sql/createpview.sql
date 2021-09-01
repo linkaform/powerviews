@@ -147,7 +147,7 @@ begin
 		elsif ischema_val !~ keyvalregex then
 			raise 'invalid ischema_val: %', ischema_val;
 		elsif oschema_key !~ keyvalregex then
-			raise 'invalid oschema_key: %', ischema_key;
+			raise 'invalid oschema_key: %', oschema_key;
 		elsif oschema_val !~ keyvalregex then
 			raise 'invalid oschema_val: %', oschema_val;
 		end if;
