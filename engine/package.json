@@ -12,7 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "mongodb": "^3.6.9",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "url-parse": "^1.5.3"
   },
   "private": true
 }
