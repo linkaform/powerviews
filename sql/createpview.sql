@@ -70,6 +70,45 @@ end;
 $func$;
 
 create or replace function
+createpview__expandischemakey(ischemakey text)
+returns text
+language plpgsql
+set search_path from current
+as $func$
+-- XXX internal use only
+-- receives as input a string of the format 'field', or 'field.field2' and
+-- returns the sql that would be needed to extract that json field(2) form a
+-- field called 'data' by convention.
+-- examples:
+--	createpview__expandischemakey('') -> (data -> '')
+--	createpview__expandischemakey('a') -> (data -> 'a')
+--	createpview__expandischemakey('a.') -> ((data -> 'a') -> '')
+--	createpview__expandischemakey('a.b') -> ((data -> 'a') -> 'b')
+--	createpview__expandischemakey('a.b.c') -> (((data -> 'a') -> 'b') -> 'c')
+declare
+	res text := 'data';
+begin
+	loop
+		if ischemakey !~ '\.' then
+			res := format('(%s -> %L)', res, ischemakey);
+			return res;
+		else
+			select
+				format('(%s -> %L)', res, t[1]),
+				t[2]
+			into
+			strict
+				res,
+				ischemakey
+			from	regexp_matches(ischemakey, '^([^.]+)\.(.*)$') as t;
+			--raise notice 'res: %, ischemakey: %', res, ischemakey;
+		end if;
+	end loop;
+end;
+$func$;
+
+
+create or replace function
 createpview(tname regclass, vname text, ischema jsonb, oschema jsonb)
 returns boolean
 language plpgsql
@@ -93,7 +132,7 @@ declare
 	oschema_val_el text; -- output schema key of element inside object
 	cols text[] := array[]::text[];
 	sql text := '';
-	ikeyregex text := '^[a-zA-Z][a-zA-Z0-9_]+$'; -- regex for keys in input schema
+	ikeyregex text := '^[a-zA-Z][a-zA-Z0-9_.]+$'; -- regex for keys in input schema
 	keyvalregex text := '^[a-zA-Z][a-zA-Z0-9_]+$'; -- regex for keys and values of everything else
 begin
 	if vname is null then
@@ -181,7 +220,7 @@ begin
 		-- convert to proper postgresql datatype
 		oschema_val_t := oschema_val::regtype;
 
-		ischema_key := format('(data -> %L)', ischema_key);
+		ischema_key := createpview__expandischemakey(ischema_key);
 		raise notice 'ischema_key: %, ischema_val_t: %', ischema_key, ischema_val_t;
 		raise notice 'oschema_key: %, oschema_val_t: %, oschema_val_idx: %, oschema_val_el: %', oschema_key, oschema_val_t, oschema_val_idx, oschema_val_el;
 
