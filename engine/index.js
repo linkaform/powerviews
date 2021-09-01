@@ -36,12 +36,13 @@ const queryclean = json => {
 };
 
 const dologin = async (username, api_key) => {
-	const body = { username, api_key };
-	console.log('dologin', username, api_key);
+	let body = { username, api_key };
+	const bodyserialized = process.env.LKFPOWERVIEWSENGINELKFLOGINOVERRIDE || JSON.stringify(body);
+	console.log('dologin', bodyserialized);
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
 	const res = await fetch(url, {
 		method: 'post',
-		body: JSON.stringify(body),
+		body: bodyserialized,
 		headers: { 'content-type': 'application/json' }
 	});
 	const json = await res.json();
