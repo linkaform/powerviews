@@ -1,3 +1,5 @@
+* bug in viewname with camel case?
+	queries.viewname=CodigoPostal fails but =codigo_postal works
 * create powerviews db in dbp3/4
 * sync view to table in user schema
 	* depends on lkf api returning schema key including necessary
