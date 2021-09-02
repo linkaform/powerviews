@@ -1,4 +1,3 @@
-* couchdb support
 * create powerviews db in dbp3/4
 * sync view to table in user schema
 	* depends on lkf api returning schema key including necessary
