@@ -77,33 +77,37 @@ set search_path from current
 as $func$
 -- XXX internal use only
 -- receives as input a string of the format 'field', or 'field.field2' and
--- returns the sql that would be needed to extract that json field(2) form a
+-- returns the sql that would be needed to extract that json field(2) from a
 -- field called 'data' by convention.
 -- examples:
---	createpview__expandischemakey('') -> (data -> '')
---	createpview__expandischemakey('a') -> (data -> 'a')
---	createpview__expandischemakey('a.') -> ((data -> 'a') -> '')
---	createpview__expandischemakey('a.b') -> ((data -> 'a') -> 'b')
---	createpview__expandischemakey('a.b.c') -> (((data -> 'a') -> 'b') -> 'c')
-declare
-	res text := 'data';
+--	createpview__expandischemakey('') -> jsonb_extract_path(data, '')
+--	createpview__expandischemakey('a') -> jsonb_extract_path(data, 'a')
+--	createpview__expandischemakey('a.') -> jsonb_extract_path(data, 'a', '')
+--	createpview__expandischemakey('a.b') -> jsonb_extract_path(data, 'a', 'b')
+--	createpview__expandischemakey('a.b.c') -> jsonb_extract_path(data, 'a', 'b', 'c')
 begin
-	loop
-		if ischemakey !~ '\.' then
-			res := format('(%s -> %L)', res, ischemakey);
-			return res;
-		else
-			select
-				format('(%s -> %L)', res, t[1]),
-				t[2]
-			into
-			strict
-				res,
-				ischemakey
-			from	regexp_matches(ischemakey, '^([^.]+)\.(.*)$') as t;
-			--raise notice 'res: %, ischemakey: %', res, ischemakey;
-		end if;
-	end loop;
+	return format('jsonb_extract_path(data, %s)', (select string_agg(quote_literal(r), ', ') from regexp_split_to_table(ischemakey, '\.') as r));
+end;
+$func$;
+
+create or replace function
+createpview__expandischemakey_text(ischemakey text)
+returns text
+language plpgsql
+set search_path from current
+as $func$
+-- XXX internal use only
+-- receives as input a string of the format 'field', or 'field.field2' and
+-- returns the sql that would be needed to extract that json field(2) as text from a
+-- field called 'data' by convention.
+-- examples:
+--	createpview__expandischemakey('') -> jsonb_extract_path_text(data, '')
+--	createpview__expandischemakey('a') -> jsonb_extract_path_text(data, 'a')
+--	createpview__expandischemakey('a.') -> jsonb_extract_path_text(data, 'a', '')
+--	createpview__expandischemakey('a.b') -> jsonb_extract_path_text(data, 'a', 'b')
+--	createpview__expandischemakey('a.b.c') -> jsonb_extract_path_text(data, 'a', 'b', 'c')
+begin
+	return format('jsonb_extract_path_text(data, %s)', (select string_agg(quote_literal(r), ', ') from regexp_split_to_table(ischemakey, '\.') as r));
 end;
 $func$;
 
@@ -219,7 +223,6 @@ begin
 		-- convert to proper postgresql datatype
 		oschema_val_t := oschema_val::regtype;
 
-		ischema_key := createpview__expandischemakey(ischema_key);
 		raise notice 'ischema_key: %, ischema_val_t: %', ischema_key, ischema_val_t;
 		raise notice 'oschema_key: %, oschema_val_t: %, oschema_val_idx: %, oschema_val_el: %', oschema_key, oschema_val_t, oschema_val_idx, oschema_val_el;
 
@@ -227,13 +230,13 @@ begin
 		if ischema_val_t::text ~ '\[\]$' and oschema_val_idx is null then
 			raise 'specified array type on input but did not requested array element on output: input: %, output: %', ischema -> i, oschema -> i;
 		elsif ischema_val_t::text ~ '\[\]$' and oschema_val_idx >= 0 then
-			cols := cols || format('(%s ->> %L::int)::%s as %I', ischema_key, oschema_val_idx, oschema_val_t, oschema_key);
+			cols := cols || format('(%s ->> %L::int)::%s as %I', createpview__expandischemakey(ischema_key), oschema_val_idx, oschema_val_t, oschema_key);
 		-- input is jsonb or a jsonb-derived type
 		elsif isjsontype(ischema_val_t) or isjsonbtype(ischema_val_t) then
-			cols := cols || format('(%s ->> %L) as %I', ischema_key, oschema_val_el, oschema_key);
+			cols := cols || format('(%s ->> %L) as %I', createpview__expandischemakey(ischema_key), oschema_val_el, oschema_key);
 		-- input is regular type
 		else
-			cols := cols || format('%s::text::%s as %I', ischema_key, oschema_val_t, oschema_key);
+			cols := cols || format('%s::%s as %I', createpview__expandischemakey_text(ischema_key), oschema_val_t, oschema_key);
 		end if;
 
 	end loop;
