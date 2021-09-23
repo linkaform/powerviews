@@ -23,6 +23,7 @@
     "url-parse": "^1.5.1"
   },
   "devDependencies": {
+    "fetch-to-curl": "^0.5.2",
     "mocha": "^9.0.1",
     "sequelize-cli": "^4.1.1",
     "supertest": "^6.1.3"

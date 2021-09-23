@@ -1,6 +1,7 @@
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
 const urlparse = require('url-parse');
+const fetch_to_curl = require('fetch-to-curl').default;
 const db = require('../models');
 const trunc_string = require('../utils/trunc_string');
 const { Query } = db;
@@ -57,6 +58,14 @@ const dologin = async (username, api_key) => {
 
 const getqueryres = async (jwt, script_id) => {
 	const url = 'https://app.linkaform.com/api/infosync/scripts/run/';
+	console.log('request', fetch_to_curl(url, {
+		method: 'post',
+		body: JSON.stringify({ script_id: script_id}),
+		headers: {
+			'content-type': 'application/json',
+			'authorization': `jwt ${jwt}`,
+		}
+	}));
 	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify({ script_id: script_id}),
