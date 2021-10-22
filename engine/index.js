@@ -131,7 +131,10 @@ const getpgqueries = async () => {
 				last_refresh + refresh) or
 			(state = 'error' and
 				extract(epoch from 'now'::timestamptz)::int >=
-				last_try + retry)
+				last_try + retry) or
+			(state = 'working' and
+				extract(epoch from 'now'::timestamptz)::int >=
+				last_try + retry * 2)
 		returning *;
 		`,
 		{
