@@ -11,6 +11,7 @@
   "author": "Abel Camarillo <acamari@verlet.org>",
   "license": "ISC",
   "dependencies": {
+    "fetch-to-curl": "^0.5.2",
     "mongodb": "^3.6.9",
     "node-fetch": "^2.6.1",
     "url-parse": "^1.5.3"
