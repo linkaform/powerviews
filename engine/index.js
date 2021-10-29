@@ -163,7 +163,8 @@ const procpgq = async pgq => {
 		} else {
 			dbdata = await querymongo(queryclean(pgq.last_query));
 		}
-		console.log('dbdata response, size: ', JSON.stringify(dbdata).length, 'data: ', trunc_string(JSON.stringify(dbdata)));
+		let dbdata_jsonstr = JSON.stringify(dbdata);
+		console.log('dbdata response, size: ', dbdata_jsonstr.length, 'data: ', trunc_string(dbdata_jsonstr));
 		// insert into table in namespace of pguser
 		//
 		await db.sequelize.transaction(async tx => {
