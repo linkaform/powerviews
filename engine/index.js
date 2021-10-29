@@ -84,7 +84,7 @@ const querymongo = async data => {
 	const url = LKFPOWERVIEWSENGINEMONGOURL;
 	const client = await MongoClient.connect(url);
 
-	//console.log('querymongo data', JSON.stringify(data, null, "  "));
+	console.log('querymongo data', JSON.stringify(data));
 	const db = client.db(data.db_name);
 	try {
 		const res = db.collection(data.collection)[data.command](data.query);
@@ -99,7 +99,7 @@ const querycouch = async data => {
 	const cleandb_name = data.db_name.replace(/\s+/g, ''); // XXX hack
 	let url = `${baseurl}/${cleandb_name}/${data.command}`;
 
-	//console.log('querycouch url', url, 'data', JSON.stringify(data, null, "  "));
+	console.log('querycouch url', url, 'data', JSON.stringify(data));
 	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify(data.query),
