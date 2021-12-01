@@ -182,7 +182,7 @@ const procpgq = async pgq => {
 		//
 		await db.sequelize.transaction(async tx => {
 			// fully qualified view name (schema.viewname)
-			const fqview = `${pgq.Pguser.name}.${pgq.view}`;
+			const fqview = `${pgq.Pguser.name}."${pgq.view}"`;
 			await db.sequelize.query(
 				`set local search_path = "${pgq.Pguser.name}";`,
 				{ transaction: tx }
