@@ -124,7 +124,6 @@ const getpgqueries = async () => {
 		-- atomically retrieve and set inqueue state
 		update queries
 		set	state = 'inqueue',
-			last_try = extract(epoch from 'now'::timestamptz)::int,
 			last_error = (
 				case when
 					state = 'working' and
@@ -158,6 +157,9 @@ const getpgqueries = async () => {
 
 const procpgq = async pgq => {
 	try {
+		let now = new Date() / 1000;
+		pgq.last_try = now;
+		await pgq.save();
 		pgq.Pguser = await pgq.getPguser();
 		pgq.Pguser.Account = await pgq.Pguser.getAccount();
 		console.log('working on query.id: %i, query.state: %s, query.script_id: %i:, pguser.name: %s ...', pgq.id, pgq.state, pgq.script_id, pgq.Pguser.name);
@@ -166,6 +168,7 @@ const procpgq = async pgq => {
 			(await dologin(pgq.Pguser.Account.email, pgq.Pguser.Account.apikey)),
 			pgq.script_id
 		);
+		pgq.last_try = now;
 		await pgq.save(); // store last query in pg db
 		let dbdata;
 		if (pgq.last_query.type === 'couchdb') {
@@ -247,7 +250,7 @@ const procpgq = async pgq => {
 		if (!dbdata.length)
 			throw 'Empty database response, table emptied.'
 		pgq.last_error = null;
-		const now = new Date() / 1000;
+		now = new Date() / 1000;
 		pgq.state = 'success';
 		pgq.last_refresh = now;
 		pgq.last_try = now;
