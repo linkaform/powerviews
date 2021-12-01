@@ -123,7 +123,17 @@ const getpgqueries = async () => {
 	const queries = (await db.sequelize.query(`
 		-- atomically retrieve and set inqueue state
 		update queries
-		set	state = 'inqueue'
+		set	state = 'inqueue',
+			last_try = extract(epoch from 'now'::timestamptz)::int,
+			last_error = (
+				case when
+					state = 'working' and
+					extract(epoch from 'now'::timestamptz)::int >=
+						last_try + retry * 2
+				then 'last try died while working, this report may be too big, try to limit the search.'
+				else last_error
+				end
+			)
 		where	state = 'unprocessed' or
 			state = 'inqueue' or
 			(state = 'success' and
