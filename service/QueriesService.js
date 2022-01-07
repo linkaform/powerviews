@@ -82,9 +82,14 @@ exports.queriesPOST = async body => await db.sequelize.transaction(async tx => {
  **/
 exports.queriesIdRefreshPUT = async id => await db.sequelize.transaction(async tx => {
 	const cur = await Query.findByPk(id, { transaction: tx });
+	const r = cur; // for consistency
+	const pguser = await cur.getPguser({ transaction: tx });
 	if (!cur)
 		throw new Error('ENOENT');
 	cur.state = 'inqueue';
+	await db.sequelize.query(`drop table if exists "${pguser.name}"."${r.table}" cascade;`, { transaction: tx });
+	await db.sequelize.query(`create table "${pguser.name}"."${r.table}" (data jsonb);`, { transaction: tx });
+	await db.sequelize.query(`grant select on table "${pguser.name}"."${r.table}" to "${pguser.name}";`, { transaction: tx });
 	return await cur.save({ transaction: tx });
 });
 
