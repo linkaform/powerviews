@@ -45,14 +45,21 @@ const dologin = async (username, api_key) => {
 	const bodyserialized = process.env.LKFPOWERVIEWSENGINELKFLOGINOVERRIDE || JSON.stringify(body);
 	console.log('dologin', bodyserialized);
 	const url = 'https://app.linkaform.com/api/infosync/user_admin/login/';
+	const curl = fetch_to_curl(url, {
+		method: 'post',
+		body: bodyserialized,
+		headers: { 'content-type': 'application/json' }
+	});
 	const res = await fetch(url, {
 		method: 'post',
 		body: bodyserialized,
 		headers: { 'content-type': 'application/json' }
 	});
+	if (!res.ok)
+		throw `error: ${curl}; not success: status ${res.status}`;
 	const json = await res.json();
 	if (!json.success)
-		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
+		throw `error: ${curl}; not success` + (json.error ? `, error: ${json.error}` : '');
 	return json.jwt;
 };
 
