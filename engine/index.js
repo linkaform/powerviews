@@ -65,14 +65,14 @@ const dologin = async (username, api_key) => {
 
 const getqueryres = async (jwt, script_id) => {
 	const url = 'https://app.linkaform.com/api/infosync/scripts/run/';
-	console.log('request', fetch_to_curl(url, {
+	const curl = fetch_to_curl(url, {
 		method: 'post',
 		body: JSON.stringify({ script_id: script_id}),
 		headers: {
 			'content-type': 'application/json',
 			'authorization': `jwt ${jwt}`,
 		}
-	}));
+	});
 	const res = await fetch(url, {
 		method: 'post',
 		body: JSON.stringify({ script_id: script_id}),
@@ -81,6 +81,8 @@ const getqueryres = async (jwt, script_id) => {
 			'authorization': `jwt ${jwt}`,
 		}
 	});
+	if (!res.ok)
+		throw `error: ${curl}; not success: status ${res.status}`;
 	const json = await res.json();
 	if (!json.success)
 		throw `${url} not success` + (json.error ? `, error: ${json.error}` : '');
