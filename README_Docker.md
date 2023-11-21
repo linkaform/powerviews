@@ -54,3 +54,9 @@ docker secret create config.json config.json
 docker service update lkf_powerengine --secret-add config.json
 docker service update lkf_powerviews --secret-add config.json
 ```
+
+### Start Docker Swarm Stack
+
+```
+docker stack deploy -c powerviews-stack.yml lkf --with-registry-auth
+```

@@ -18,6 +18,9 @@ echo "Checking for config file..."
 CONFFILE=/srv/powerviews/config/config.json
 SECRETCONF=/run/secrets/config.json
 STAROK=false
+if [ -f "$SECRETCONF" ]; then
+    cp   $SECRETCONF /srv/powerviews/config/config.json
+fi
 if [ -f "$CONFFILE" ]; then
     echo "$CONFFILE exists."
     STARTOK=true
