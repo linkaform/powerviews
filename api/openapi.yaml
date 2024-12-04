@@ -347,7 +347,9 @@ components:
         email:
           type: string
           description: unique email in account domain used to identify account
-          format: email
+          # XXX due to linkaform changes email is no longer an email, just regular
+          #     string
+          # format: email
           example: juan.perez@example.com
         desc:
           type: string
