@@ -32,12 +32,33 @@ cp config/config.default.json config/config.json
 vim config/config.json
 ```
 
-### Setup powerviews database
-To start the powerviews REST API server, you need first to create postgresql
-database, database user and populate empty schema; there's a helper for that:
+### Install node.js dependencies:
 
 ```
-sh ./pg_utils/setup_pg.sh
+npm install
+```
+
+
+### Setup powerviews database
+To start the powerviews REST API server, you need first to setup postgresql.
+
+#### Create postgresql cluster
+
+In case you need to create a postgresql cluster in localhost by hand you can
+make:
+
+```
+initdb -U postgres -D pg -E UTF-8
+postgres -D pg
+```
+
+#### Populate cluster skeleton
+
+To create postgresql database, database user and populate empty schema; there's
+a helper for that:
+
+```
+(cd pg_utils && sh ./setup_pg.sh)
 ```
 
 #### Populate database schema
