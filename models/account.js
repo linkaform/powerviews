@@ -28,8 +28,13 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.TEXT,
 			allowNull: false,
 			unique: true,
+			// XXX due to other changes email is no longer a email
+			// but has username semantics
+			//validate: {
+			//	isEmail: true
+			//}
 			validate: {
-				isEmail: true
+				notEmpty: true
 			}
 			// XXX add also proper SQL level constraint
 		},
