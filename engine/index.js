@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { MongoClient } = require('mongodb');
 const fetch = require('node-fetch');
 const urlparse = require('url-parse');
@@ -8,14 +9,28 @@ const { Query } = db;
 
 let LKFPOWERVIEWSENGINEMONGOURL;
 let LKFPOWERVIEWSENGINECOUCHURL;
+// powerengine writes "OK" to this file when it receives a SIGUSR2 signal
+let LKFPOWERVIEWSENGINEHEALTH;
 
 const getconfig = () => {
-	({ LKFPOWERVIEWSENGINEMONGOURL, LKFPOWERVIEWSENGINECOUCHURL  } = process.env);
+	({
+		LKFPOWERVIEWSENGINEMONGOURL,
+		LKFPOWERVIEWSENGINECOUCHURL,
+		LKFPOWERVIEWSENGINEHEALTH = '/tmp/powerengine-health'
+	} = process.env);
 	if (!LKFPOWERVIEWSENGINEMONGOURL)
 		throw 'error LKFPOWERVIEWSENGINEMONGOURL variable required in engine environment'
 	if (!LKFPOWERVIEWSENGINECOUCHURL)
 		throw 'error LKFPOWERVIEWSENGINECOUCHURL variable required in engine environment'
+	if (!LKFPOWERVIEWSENGINEHEALTH)
+		throw 'error LKFPOWERVIEWSENGINEHEALTH variable required'
 }
+
+process.on('SIGUSR2', () => {
+        fs.writeFile(LKFPOWERVIEWSENGINEHEALTH, "OK", (err) => {
+                if (err) throw err;
+        })
+});
 
 const queryclean = json => {
 	switch (typeof json) {
