@@ -4,7 +4,6 @@
   "description": "powerviews api (not engine)",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm install",
     "test": "mocha tests/index.js",
     "start": "node index.js"
   },
