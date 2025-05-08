@@ -15,6 +15,7 @@ elif [[ $(hostname) == "powerengine" || $1 == "powerengine" ]]; then
 fi
 echo "Current Directory is" $(pwd)
 echo "Checking for config file..."
+echo "whoami" $(whoami)
 CONFFILE=/srv/powerviews/config/config.json
 SECRETCONF=/run/secrets/config.json
 STAROK=false
@@ -37,6 +38,7 @@ fi
 
 
 if [ $STARTOK ]; then
+    echo "===== starting...."
     npm start
 else
     echo "App will not start... :("
