@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# healthcheck: test if powerengine can update its status file after receiving a signal
+# XXX nodepid is get the hard way because pgrep isn't available inside the container
+#       and debian repos are down...
+
+set -e
+set -o pipefail
+(nodepid=`grep -lE '^Name:[[:space:]]*node$' /proc/*/status | sed -E 's!^/proc/([0-9]+)/status$!\1!'` &&
+touch /tmp/powerengine-healthcheck.cookie &&
+kill -USR2 $nodepid &&
+sleep 1 &&
+test ! \( "/tmp/powerengine-health" -ot "/tmp/powerengine-healthcheck.cookie" \) -a x"$(< /tmp/powerengine-health)" = xOK) || exit 1
