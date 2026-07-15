@@ -1,3 +1,8 @@
+.dockerignore
+.git*
+# ignore vim temp files
+.*.sw?
+Dockerfile*
 config/config.json
-.git
 docker/envs
+docker/secrets
