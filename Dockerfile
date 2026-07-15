@@ -1,7 +1,12 @@
-FROM debian:trixie AS develop
-LABEL org.opencontainers.image.authors="Linkaform"
+FROM debian:trixie AS base
+ARG POWERVIEWSDIR=/srv/powerviews
+ARG POWERVIEWSUSER=www-data
+# copy from arg to env
+ENV POWERVIEWSDIR=${POWERVIEWSDIR}
 
-RUN apt-get update && \
+LABEL org.opencontainers.image.authors="Linkaform"
+RUN export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update && \
     apt-get install -y \
       curl \
       nodejs \
@@ -10,11 +15,20 @@ RUN apt-get update && \
       wget \
     && rm -fr /var/lib/apt/lists/*
 
+USER ${POWERVIEWSUSER}
 WORKDIR /srv/powerviews
 
-###################################################
-#Copys all files to the container
-###################################################
-FROM develop AS production
+#####################
+FROM base AS api
 
-COPY --chown=www-data:www-data ./ /srv/powerviews/
+COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./ ${POWERVIEWSDIR}
+WORKDIR ${POWERVIEWSDIR}
+ENV HOME=${POWERVIEWSDIR}
+RUN npm install
+
+# engine requires that modules in api dir are installed
+FROM api AS engine
+
+WORKDIR ${POWERVIEWSDIR}/engine
+ENV HOME=${POWERVIEWSDIR}/engine
+RUN npm install
