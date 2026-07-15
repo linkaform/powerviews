@@ -1,45 +1,41 @@
 #!/bin/bash
 
-echo "command" $1
-if [[ $(hostname) == "powerviews" || $1 == "powerviews" ]]; then
-    echo "hostname: " $(hostname)
-    echo "starting PowerViews API ...."
-    cd  /srv/powerviews/
-elif [[ $(hostname) == "powerengine" || $1 == "powerengine" ]]; then
-    echo "hostname: " $(hostname)
-    echo "starting PowerViews Engine ...."
-    cd  /srv/powerviews/utils
-    #node sync_db.js
-    cd  /srv/powerviews/engine
+powerviewsdir=/srv/powerviews
+confdest=$powerviewsdir/config/config.json
+conforig=/run/secrets/config.json
+prog=`basename "$0"` || exit 1
+err(){
+	echo "$prog: $@" >&2
+	exit 1
+}
 
-fi
-echo "Current Directory is" $(pwd)
-echo "Checking for config file..."
-echo "whoami" $(whoami)
-CONFFILE=/srv/powerviews/config/config.json
-SECRETCONF=/run/secrets/config.json
-STAROK=false
-if [ -f "$SECRETCONF" ]; then
-    cp   $SECRETCONF /srv/powerviews/config/config.json
-fi
-if [ -f "$CONFFILE" ]; then
-    echo "$CONFFILE exists."
-    STARTOK=true
-else
-    echo "$CONFFILE NOT found exists."
-    echo "searching file as a docker swarm secret."
-    if [ -f "$SECRETCONF" ]; then
-        cp  $SECRETCONF /srv/powerviews/config/config.json
-        STARTOK=true
-    else
-        echo $SECRETCONF "file not found, please check the config files exists."
-    fi
-fi
+checkconf(){
+	cp "$conforig" "$confdest" || err cannot cp config file "$conforig" to "$confdest"
+}
 
+# send all output to stderr
+exec >&2
 
-if [ $STARTOK ]; then
-    echo "===== starting...."
-    npm start
-else
-    echo "App will not start... :("
-fi
+command="${1:?command required}"
+echo "command" "$command" >&2
+case "$command" in
+	powerviews) 
+		echo starting $command
+		(
+			set -x
+			cd $powerviewsdir &&
+			checkconf &&
+			npm start
+		)
+		;;
+	powerengine)
+		echo starting $command
+		(cd $powerviewsdir/engine)
+		(
+			set -x
+			cd $powerviewsdir/engine && # powerengine don't requires the conf file, only env variables
+			npm start
+		)
+		;;
+	*) err unknown command $command;;
+esac
