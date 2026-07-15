@@ -1,8 +1,8 @@
 #!/bin/bash
 
-powerviewsdir=/srv/powerviews
-confdest=$powerviewsdir/config/config.json
-conforig=/run/secrets/config.json
+powerviewsdir=${POWERVIEWSDIR:-/srv/powerviews}
+confdest=${POWERVIEWSCONFIG:-$powerviewsdir/config/config.json}
+conforig=${POWERVIEWSCONFIGSECRET:-/run/secrets/config.json}
 prog=`basename "$0"` || exit 1
 err(){
 	echo "$prog: $@" >&2
@@ -16,11 +16,11 @@ checkconf(){
 # send all output to stderr
 exec >&2
 
-command="${1:?command required}"
-echo "command" "$command" >&2
+command="${1:?$prog: command required}"
+echo "$prog: command:" "$command"
 case "$command" in
 	powerviews) 
-		echo starting $command
+		echo $prog: starting $command
 		(
 			set -x
 			cd $powerviewsdir &&
@@ -29,11 +29,12 @@ case "$command" in
 		)
 		;;
 	powerengine)
-		echo starting $command
+		echo $prog: starting $command
 		(cd $powerviewsdir/engine)
 		(
 			set -x
 			cd $powerviewsdir/engine && # powerengine don't requires the conf file, only env variables
+			checkconf &&
 			npm start
 		)
 		;;
