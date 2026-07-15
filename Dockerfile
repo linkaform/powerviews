@@ -25,6 +25,7 @@ COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./ ${POWERVIEWSDIR}
 WORKDIR ${POWERVIEWSDIR}
 ENV HOME=${POWERVIEWSDIR}
 RUN npm install
+CMD [ "/srv/powerviews/docker/entrypoint.sh", "powerviews" ]
 
 # engine requires that modules in api dir are installed
 FROM api AS engine
@@ -32,3 +33,4 @@ FROM api AS engine
 WORKDIR ${POWERVIEWSDIR}/engine
 ENV HOME=${POWERVIEWSDIR}/engine
 RUN npm install
+CMD [ "/srv/powerviews/docker/entrypoint.sh", "powerengine" ]
