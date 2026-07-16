@@ -9,4 +9,5 @@ config/config.json
 # used for devel testing
 utils/tryscript
 docker/secrets
+docker/envs
 pgdata
