@@ -1,5 +1,6 @@
 # ignore vim tmp files
 .*.sw?
+pg
 node_modules
 # ignore because it include secrets, run engine as established in README
 runengine.sh
@@ -8,3 +9,4 @@ config/config.json
 # used for devel testing
 utils/tryscript
 docker/secrets
+pgdata
