@@ -21,9 +21,12 @@ WORKDIR /srv/powerviews
 #####################
 FROM base AS api
 
+ARG POWERVIEWSCONFIGSECRET=/run/secrets/config.json
+ARG POWERVIEWSCONFIG=${POWERVIEWSDIR}/config/config.json
 COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./ ${POWERVIEWSDIR}
 WORKDIR ${POWERVIEWSDIR}
 ENV HOME=${POWERVIEWSDIR}
+ENV POWERVIEWSCONFIG=${POWERVIEWSCONFIG}
 RUN npm install
 CMD [ "/srv/powerviews/docker/entrypoint.sh", "powerviews" ]
 
