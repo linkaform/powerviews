@@ -1,0 +1,81 @@
+configs:
+  powerviews_pg__pg_hba.conf:
+    file: ${PGHBACONF:-docker/configs/pg_hba.conf}
+
+secrets:
+  linkaform.com.chained.crt:
+    file: ${LINKAFORMCRT:-docker/secrets/linkaform.com.chained.crt}
+  linkaform.com.key:
+    file: ${LINKAFORMCRTKEY:-docker/secrets/linkaform.com.key}
+  config.json:
+    file: ${POWERVIEWSCONFIG:-docker/secrets/config.json}
+
+services:
+  powerviews_pg:
+    image: postgres:15-alpine # XXX we are stuck at pg 15, need changes in role creation to handle pg>=16
+    hostname: pv_psql
+    restart: always
+    configs:
+      - source: powerviews_pg__pg_hba.conf
+        target: /var/lib/postgresql/tmp/pg_hba.conf
+    env_file: 
+      - docker/envs/powerviews_pg.env # for POSTGRES_PASSWORD
+    environment:
+        - CONFIGTEMP=/var/lib/postgresql/tmp
+        - PGDATA=/var/lib/postgresql/15/docker
+        - PAGER=less # nicer gnu less instead of alpine more
+        - EDITRC=/dev/null # dont use ~/.editrc by default
+        - POSTGRES_INITDB_ARGS=--data-checksums -E UTF-8
+    volumes:
+      - type: bind
+        bind:
+          create_host_path: ${PGDATAORIGCREATE:-true}
+        source: ${PGDATAORIG:-pgdata}
+        target: /var/lib/postgresql/15/docker
+    shm_size: 256MB # postgresql caches
+    secrets:
+      - linkaform.com.chained.crt
+      - linkaform.com.key
+    command: >
+        postgres
+        -c log_min_duration_statement=1000
+        -c log_destination=stderr
+        -c log_parameter_max_length=1024
+        -c ssl=on
+        -c ssl_cert_file=linkaform.com.chained.crt
+        -c ssl_key_file=linkaform.com.key
+    entrypoint: |
+      bash -c '
+      set -e
+      rm $$PGDATA/.gitkeep 2>/dev/null || true
+      apk update
+      apk add less strace
+      # config psql ux
+      echo bind -v > /.editrc
+      echo bind "^I" rl_complete >> /.editrc
+      cat >/docker-entrypoint-initdb.d/cpconfig.sh <<"SH"
+      # copy config if PGDATA dir is not empty, if its
+      # empty and we copy files there initdb will fail
+      test x`stat -c %h $$PGDATA` = x2 || (set -x; install -o postgres -g postgres -m 0600 "$$CONFIGTEMP"/* /run/secrets/* "$$PGDATA")
+      SH
+      . /docker-entrypoint-initdb.d/cpconfig.sh
+      exec docker-entrypoint.sh "$@"
+      '
+
+  powerengine:
+    hostname: powerengine
+    image: linkaform/powerengine:prod
+    build:
+       context: ./
+       dockerfile: Dockerfile
+       target: engine
+    env_file:
+        - docker/envs/powerengine.env
+    command: powerengine
+    secrets:
+      - config.json
+    healthcheck:
+      test: /srv/powerviews/engine/healthcheck
+      interval: 10s
+      timeout: 5s
+      retries: 5
