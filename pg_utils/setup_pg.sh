@@ -4,7 +4,6 @@
 (
 err(){ echo "$0: $@" >&2; exit 1; }
 
-set -x
 # creates main powerviews_admin user, then creates main powerviews database with
 # that user as owner
 SUPERUSER=${POSTGRES_USER:-postgres}
@@ -15,7 +14,7 @@ _adminuserpasswordsql=
 if test "$adminuserpassword"; then
 	# password must not contain single quotes
 	expr "$adminuserpassword" : "[^']\{1,\}\$" >/dev/null || err invalid password for ${adminuser}
-	_adminuserpasswordsql="ALTER ROLE $adminuser WITH PASSWORD '${adminuserpassword}'"
+	_adminuserpasswordsql="ALTER ROLE $adminuser WITH PASSWORD '${adminuserpassword}';"
 fi
 
 createuser -U $SUPERUSER -r $adminuser
