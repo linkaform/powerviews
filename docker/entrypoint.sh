@@ -17,7 +17,6 @@ checkconf(){
 exec >&2
 
 command="${1:?$prog: command required}"
-echo "$prog: command:" "$command"
 case "$command" in
 	powerviews) 
 		echo $prog: starting $command
@@ -38,5 +37,11 @@ case "$command" in
 			npm start
 		)
 		;;
-	*) err unknown command $command;;
+	*) 
+		(
+			cd $powerviewsdir &&
+			checkconf &&
+			"$@"
+		)
+		;;
 esac
