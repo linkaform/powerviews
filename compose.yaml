@@ -114,11 +114,9 @@ services:
 
   powerviews:
     hostname: powerviews
-    image: linkaform/powerengine:prod
+    image: linkaform/powerviews:prod
     build:
        target: api
-    env_file:
-        - docker/envs/powerengine.env
     command: powerviews
     secrets:
       - config.json
