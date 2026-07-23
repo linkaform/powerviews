@@ -50,7 +50,6 @@ services:
     entrypoint: |
       bash -c '
       set -e
-      rm $$PGDATA/.gitkeep 2>/dev/null || true
       apk update
       apk add less strace
       # config psql ux
