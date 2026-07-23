@@ -33,9 +33,14 @@ services:
         # custom dir for additional auxiliary files (used during operation)
         - CONFIGAUX=${CONFIGEXTRA:-/var/lib/postgresql/conf}
         # where auxiliary sql files are inside container
-        - POWERVIEWS_INIT_SQLDIR=/docker-entrypoint-initdb.d/_pv
+        - POWERVIEWS_INIT_SQLDIR=/__docker-entrypoint-initdb.d/_pv
         - PAGER=less # nicer gnu less instead of alpine more
         - EDITRC=/dev/null # dont use ~/.editrc by default
+        # if set and not null prepare this postgres instance for restoring an
+        # existing database generated with pg_dumpall, implies:
+        # * dont run setup_pg.sh
+        # * 
+        - FOR_RESTORE=${FOR_RESTORE:-}
     volumes:
       - type: bind
         bind:
@@ -46,12 +51,12 @@ services:
         bind:
           create_host_path: false
         source: ./pg_utils/setup_pg.sh
-        target: /docker-entrypoint-initdb.d/setup_pg.sh
+        target: /__docker-entrypoint-initdb.d/setup_pg.sh
       - type: bind
         bind:
           create_host_path: false
         source: ./sql
-        target: /docker-entrypoint-initdb.d/_pv
+        target: /__docker-entrypoint-initdb.d/_pv
     shm_size: 256MB # postgresql caches
     secrets:
       - linkaform.com.key
@@ -69,6 +74,13 @@ services:
       set -e
       apk update
       apk add less strace
+      # if not in restore mode allow initialization files to run
+      if test "$$FOR_RESTORE"; then
+        echo "+ In FOR_RESTORE mode" >&2
+      else
+        rmdir /docker-entrypoint-initdb.d
+        ln -sf /__docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
+      fi
       # config psql ux
       echo bind -v > /.editrc
       echo bind "^I" rl_complete >> /.editrc
