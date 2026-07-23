@@ -56,6 +56,12 @@ docker compose up
 
 ## Ready for serving requests
 
+# To push images
+
+```
+docker compose push powerengine powerviews
+```
+
 # Instruction for restoring a database backup
 
 ## Start postgres for restore
