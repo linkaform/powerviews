@@ -99,6 +99,7 @@ services:
   powerengine:
     hostname: powerengine
     image: linkaform/powerengine:prod
+    restart: always
     build:
        target: engine
     env_file:
@@ -115,6 +116,7 @@ services:
   powerviews:
     hostname: powerviews
     image: linkaform/powerviews:prod
+    restart: always
     build:
        target: api
     command: powerviews
