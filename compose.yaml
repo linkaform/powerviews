@@ -78,7 +78,7 @@ services:
       if test "$$FOR_RESTORE"; then
         echo "+ In FOR_RESTORE mode" >&2
       else
-        rmdir /docker-entrypoint-initdb.d
+        rmdir /docker-entrypoint-initdb.d || true
         ln -sf /__docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
       fi
       # config psql ux
