@@ -1,3 +1,5 @@
+name: powerviews
+
 configs:
   powerviews_pg__pg_hba.conf:
     file: ${PGHBACONF:-docker/configs/pg_hba.conf}
