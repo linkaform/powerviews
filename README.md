@@ -54,9 +54,37 @@ docker compose run --rm --build powerengine node ./utils/sync_db.js
 docker compose up
 ```
 
-# Done
+## Ready for serving requests
 
-# Instructions for usage without docker (not recommended)
+# Instruction for restoring a database backup
+
+## Start postgres for restore
+```
+env FOR_RESTORE=1 docker compose up postgres
+```
+
+## Restore backup
+
+For a backup generated with: `pg_dumpall -U postgres`
+
+Assuming your database backup is located at `~/tmp/powerviews.pgdumpall`
+and your postgres container started in previous step is `powerviews-postgres-1`
+
+```
+# ignoring the "CREATE ROLE postgres" statements allows us to use ON_ERROR_STOP=1
+cat ~/tmp/powerviews.pgdumpall | \
+    grep -Ev '^CREATE ROLE postgres' | \
+    docker exec -i powerviews-postgres-1 psql -U postgres --set ON_ERROR_STOP=1 -f- || echo ERROR
+```
+## No need to populate db schema (as its populated from the backup)
+
+## Start remaining services
+
+```
+docker compose up
+```
+
+# XXX Instructions for usage without docker (not recommended)
 
 ### Install node.js dependencies:
 
