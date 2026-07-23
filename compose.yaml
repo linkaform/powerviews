@@ -13,7 +13,7 @@ secrets:
     file: ${POWERVIEWSCONFIG:-docker/secrets/config.json}
 
 services:
-  powerviews_pg:
+  postgres:
     image: postgres:15-alpine # XXX we are stuck at pg 15, need changes in role creation to handle pg>=16
     hostname: pv_psql
     restart: always
@@ -88,8 +88,6 @@ services:
     hostname: powerengine
     image: linkaform/powerengine:prod
     build:
-       context: ./
-       dockerfile: Dockerfile
        target: engine
     env_file:
         - docker/envs/powerengine.env
@@ -101,3 +99,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  powerviews:
+    hostname: powerviews
+    image: linkaform/powerengine:prod
+    build:
+       target: api
+    env_file:
+        - docker/envs/powerengine.env
+    command: powerviews
+    secrets:
+      - config.json

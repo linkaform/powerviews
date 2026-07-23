@@ -35,12 +35,34 @@ cp docker/secrets/linkaform.com.key.example docker/secrets/linkaform.com.key
 # edit new files with proper values
 ```
 
+# Instructions for usage with docker (recommended)
+
+## Start postgres
+
+```
+docker compose up postgres
+```
+## Populate database schema
+
+```
+docker compose run --rm --build powerengine node ./utils/sync_db.js
+```
+
+## Start remaining services
+
+```
+docker compose up
+```
+
+# Done
+
+# Instructions for usage without docker (not recommended)
+
 ### Install node.js dependencies:
 
 ```
 npm install
 ```
-
 
 ### Setup powerviews database
 To start the powerviews REST API server, you need first to setup postgresql.
