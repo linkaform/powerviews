@@ -20,16 +20,19 @@ Polls postgresql database often to get list of work to do and executes it
 
 ## Start powerviews REST API server
 
-### Setup configuration file
+### Setup configuration files
 
-Default configuration file is on config/config.default.json, you must create a
-copy of this file replacing the placeholders with valid values and set it up to
-the proper path config/config.json; config/config.json file is ignored in
-repository:
+Default configuration files are on docker/envs and docker/secrets, you must
+create a copy of this file without .example suffix and replace the placeholders
+with valid values:
 
 ```
-cp config/config.default.json config/config.json
-vim config/config.json
+cp docker/envs/powerengine.env.example docker/envs/powerengine.env
+cp docker/envs/powerviews_pg.env.example docker/envs/powerviews_pg.env
+cp docker/secrets/config.json.example docker/secrets/config.json
+cp docker/secrets/linkaform.com.key.example docker/secrets/linkaform.com.key
+
+# edit new files with proper values
 ```
 
 ### Install node.js dependencies:
