@@ -1,0 +1,8 @@
+# ports to publish when deploying to production
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+  powerviews:
+    ports:
+      - "8080:8080"
