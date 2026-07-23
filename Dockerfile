@@ -28,7 +28,8 @@ WORKDIR ${POWERVIEWSDIR}
 ENV HOME=${POWERVIEWSDIR}
 ENV POWERVIEWSCONFIG=${POWERVIEWSCONFIG}
 RUN npm install
-CMD [ "/srv/powerviews/docker/entrypoint.sh", "powerviews" ]
+ENTRYPOINT [ "/srv/powerviews/docker/entrypoint.sh" ]
+CMD [ "powerviews" ]
 
 # engine requires that modules in api dir are installed
 FROM api AS engine
@@ -36,4 +37,4 @@ FROM api AS engine
 WORKDIR ${POWERVIEWSDIR}/engine
 ENV HOME=${POWERVIEWSDIR}/engine
 RUN npm install
-CMD [ "/srv/powerviews/docker/entrypoint.sh", "powerengine" ]
+CMD [ "powerengine" ]
