@@ -23,30 +23,47 @@ services:
       - source: linkaform.com.chained.crt
         target: /var/lib/postgresql/tmp/linkaform.com.chained.crt
     env_file: 
-      - docker/envs/powerviews_pg.env # for POSTGRES_PASSWORD
+      # for POSTGRES_PASSWORD, POWERVIEWS_ADMINUSER_PASSWORD
+      - docker/envs/powerviews_pg.env
     environment:
-        - CONFIGTEMP=/var/lib/postgresql/tmp
         - PGDATA=/var/lib/postgresql/15/docker
+        - POSTGRES_INITDB_ARGS=--data-checksums -E UTF-8
+        # custom dir for temp files during initialization
+        - CONFIGTMP=/var/lib/postgresql/tmp
+        # custom dir for additional auxiliary files (used during operation)
+        - CONFIGAUX=${CONFIGEXTRA:-/var/lib/postgresql/conf}
+        # where auxiliary sql files are inside container
+        - POWERVIEWS_INIT_SQLDIR=/docker-entrypoint-initdb.d/_pv
         - PAGER=less # nicer gnu less instead of alpine more
         - EDITRC=/dev/null # dont use ~/.editrc by default
-        - POSTGRES_INITDB_ARGS=--data-checksums -E UTF-8
     volumes:
       - type: bind
         bind:
           create_host_path: ${PGDATAORIGCREATE:-true}
         source: ${PGDATAORIG:-pgdata}
         target: /var/lib/postgresql/15/docker
+      - type: bind
+        bind:
+          create_host_path: false
+        source: ./pg_utils/setup_pg.sh
+        target: /docker-entrypoint-initdb.d/setup_pg.sh
+      - type: bind
+        bind:
+          create_host_path: false
+        source: ./sql
+        target: /docker-entrypoint-initdb.d/_pv
     shm_size: 256MB # postgresql caches
     secrets:
       - linkaform.com.key
     command: >
         postgres
+        -c hba_file=${CONFIGAUX:-/var/lib/postgresql/conf}/pg_hba.conf
         -c log_min_duration_statement=1000
         -c log_destination=stderr
         -c log_parameter_max_length=1024
         -c ssl=on
-        -c ssl_cert_file=linkaform.com.chained.crt
-        -c ssl_key_file=linkaform.com.key
+        -c ssl_cert_file=${CONFIGAUX:-/var/lib/postgresql/conf}/linkaform.com.chained.crt
+        -c ssl_key_file=${CONFIGAUX:-/var/lib/postgresql/conf}/linkaform.com.key
     entrypoint: |
       bash -c '
       set -e
@@ -55,12 +72,15 @@ services:
       # config psql ux
       echo bind -v > /.editrc
       echo bind "^I" rl_complete >> /.editrc
-      cat >/docker-entrypoint-initdb.d/cpconfig.sh <<"SH"
-      # copy config if PGDATA dir is not empty, if its
-      # empty and we copy files there initdb will fail
-      test x`stat -c %h $$PGDATA` = x2 || (set -x; install -o postgres -g postgres -m 0600 "$$CONFIGTEMP"/* /run/secrets/* "$$PGDATA")
-      SH
-      . /docker-entrypoint-initdb.d/cpconfig.sh
+      # copy tmp config to aux config
+      # XXX needed specially because pg process dont likes permissions of
+      # /run/secrets/* files and they cannot be changed, so we copy them with
+      # right permissions
+      (
+       set -xe;
+       mkdir -p "$$CONFIGAUX";
+       install -o postgres -g postgres -m 0600 "$$CONFIGTMP"/* /run/secrets/* "$$CONFIGAUX"
+      )
       exec docker-entrypoint.sh "$@"
       '
 
