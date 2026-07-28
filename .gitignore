@@ -10,4 +10,4 @@ config/config.json
 utils/tryscript
 docker/secrets
 docker/envs
-pgdata
+pgdata*
