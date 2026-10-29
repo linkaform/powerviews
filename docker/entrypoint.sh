@@ -38,10 +38,7 @@ case "$command" in
 		)
 		;;
 	*) 
-		(
-			cd $powerviewsdir &&
-			checkconf &&
-			"$@"
-		)
+		checkconf
+		"$@"
 		;;
 esac
