@@ -22,10 +22,10 @@ ARG POWERVIEWSUSER=www-data
 ENV POWERVIEWSDIR=${POWERVIEWSDIR}
 
 LABEL org.opencontainers.image.authors="Linkaform"
-#RUN export DEBIAN_FRONTEND=noninteractive;
-#    apt-get update && \
-#    apt-get install -y vim \
-#    && rm -fr /var/lib/apt/lists/*
+RUN export DEBIAN_FRONTEND=noninteractive; \
+    apt update && \
+    apt install -y time \
+    && rm -fr /var/lib/apt/lists/*
 
 USER ${POWERVIEWSUSER}
 WORKDIR /srv/powerviews
@@ -51,14 +51,19 @@ FROM node24 AS engine
 
 ARG POWERVIEWSCONFIGSECRET=/run/secrets/config.json
 ARG POWERVIEWSCONFIG=${POWERVIEWSDIR}/config/config.json
-COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./ ${POWERVIEWSDIR}
 WORKDIR ${POWERVIEWSDIR}
+RUN mkdir engine
+# special dance to speedup: only do again npm install if package*.json files changed
+COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./package*.json ./
+COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER ./engine/package*.json ./engine
 ENV HOME=${POWERVIEWSDIR}
 ENV POWERVIEWSCONFIG=${POWERVIEWSCONFIG}
 RUN npm install
-ENTRYPOINT [ "/srv/powerviews/docker/entrypoint.sh" ]
 
 WORKDIR ${POWERVIEWSDIR}/engine
 ENV HOME=${POWERVIEWSDIR}/engine
-RUN npm install
+RUN (cd .. && npm install) && npm install
+
+COPY --chown=$POWERVIEWSUSER:$POWERVIEWSUSER --exclude=package*.json ./ ${POWERVIEWSDIR}
+ENTRYPOINT [ "/srv/powerviews/docker/entrypoint.sh" ]
 CMD [ "powerengine" ]
