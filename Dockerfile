@@ -14,7 +14,8 @@ USER ${POWERVIEWSUSER}
 WORKDIR /srv/powerviews
 
 #####################
-FROM node:lts-trixie AS node24
+# XXX node-26 fails with: MongoParseError: URI malformed, cannot be parsed
+FROM node:24-trixie AS node24
 ARG POWERVIEWSDIR=/srv/powerviews
 ARG POWERVIEWSUSER=www-data
 # copy from arg to env
