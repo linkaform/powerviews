@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		state: {
 			type: DataTypes.ENUM,
-			values: ['unprocessed', 'inqueue', 'working', 'error', 'success'],
+			values: ['unprocessed', 'inqueue', 'working', 'error', 'success', 'disabled'],
 			defaultValue: 'unprocessed'
 		},
 		view: {
