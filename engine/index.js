@@ -195,13 +195,15 @@ const procpgq = async pgq => {
 		pgq.last_try = now;
 		await pgq.save(); // store last query in pg db
 		let dbdata;
+		console.log('query.id: %i, query.script_id: %i, will query %s', pgq.id, pgq.script_id, (pgq.last_query.type == 'couchdb' ? 'couchdb' : 'mongo'))
+
 		if (pgq.last_query.type === 'couchdb') {
 			dbdata = await querycouch(pgq.last_query);
 		} else {
 			dbdata = await querymongo(queryclean(pgq.last_query));
 		}
 		let dbdata_jsonstr = JSON.stringify(dbdata);
-		console.log('dbdata response, size: ', dbdata_jsonstr.length, 'data: ', trunc_string(dbdata_jsonstr));
+		console.log('query.id: %i, dbdata response, size: %i, data: %s', pgq.id, dbdata_jsonstr.length, trunc_string(dbdata_jsonstr));
 		// insert into table in namespace of pguser
 		//
 		await db.sequelize.transaction(async tx => {
